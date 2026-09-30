@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   Param,
+  ParseEnumPipe,
   ParseUUIDPipe,
   Patch,
   Post,
@@ -56,6 +57,23 @@ export class ClientsController {
     @CurrentUser() user: HubAuthUser,
   ) {
     return this.clients.setLicense(id, dto, user.id);
+  }
+
+  /** Cria (ou tenta criar novamente) a instalação no servidor. */
+  @HttpCode(200)
+  @Post(':id/provision')
+  provision(@Param('id', ParseUUIDPipe) id: string) {
+    return this.clients.provision(id);
+  }
+
+  @HttpCode(200)
+  @Post(':id/instance/:action')
+  instanceAction(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('action', new ParseEnumPipe(['start', 'stop', 'redeploy']))
+    action: 'start' | 'stop' | 'redeploy',
+  ) {
+    return this.clients.instanceAction(id, action);
   }
 
   @HttpCode(200)

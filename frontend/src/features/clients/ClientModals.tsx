@@ -3,7 +3,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
-import { AlertTriangle, KeyRound } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, KeyRound, XCircle } from 'lucide-react'
 import { getErrorMessage } from '@/lib/api'
 import { cn } from '@/lib/cn'
 import { digits, maskPhone } from '@/lib/format'
@@ -12,11 +12,13 @@ import { Button } from '@/components/ui/Button'
 import { Field, Input, Select, Textarea } from '@/components/ui/Field'
 import { MoneyInput, formatMoneyInput, parseMoney } from '@/components/ui/MoneyInput'
 import { CopyBlock } from '@/components/ui/CopyBlock'
+import { Switch } from '@/components/ui/Switch'
 import { useToast } from '@/components/ui/Toast'
 import {
   clientsApi,
   clientsKeys,
   installEnv,
+  managedUrl,
   LICENSE_STATUS,
   REASONS,
   settingsApi,
@@ -38,7 +40,8 @@ const slugify = (v: string) =>
 const schema = z.object({
   name: z.string().trim().min(2, 'Informe o nome').max(160),
   slug: z.string().regex(/^[a-z0-9](?:[a-z0-9-]{0,58}[a-z0-9])?$/, 'Use letras minúsculas, números e hífen'),
-  url: z.url('Endereço inválido (inclua https://)'),
+  // Validado no envio: só é exigido quando a instalação é manual.
+  url: z.string(),
   ownerName: z.string().max(120).optional(),
   ownerPhone: z.string().refine((v) => !v || /^\d{10,13}$/.test(digits(v)), 'Telefone inválido'),
   ownerEmail: z.string().refine((v) => !v || z.email().safeParse(v).success, 'E-mail inválido'),
@@ -57,12 +60,17 @@ export function ClientFormModal({
   open: boolean
   client: Client | null
   onClose: () => void
-  onCreated?: (c: ClientWithKey) => void
+  onCreated?: (c: Client | ClientWithKey) => void
 }) {
   const toast = useToast()
   const qc = useQueryClient()
   const form = useForm<FormValues>({ resolver: zodResolver(schema) })
   const { errors, dirtyFields } = form.formState
+  const settings = useQuery({ queryKey: settingsKey, queryFn: settingsApi.get, enabled: open && !client })
+  const provisioning = settings.data?.provisioning ?? null
+  // Cliente novo: cria a instalação automaticamente quando o servidor está disponível.
+  const [auto, setAuto] = useState(true)
+  const automatic = !client && Boolean(provisioning) && auto
 
   useEffect(() => {
     if (!open) return
@@ -93,7 +101,7 @@ export function ClientFormModal({
       const data = {
         name: v.name,
         slug: v.slug,
-        url: v.url,
+        ...(automatic ? { provision: true } : { url: v.url }),
         ownerName: v.ownerName || undefined,
         ownerPhone: digits(v.ownerPhone) || undefined,
         ownerEmail: v.ownerEmail || undefined,
@@ -106,9 +114,9 @@ export function ClientFormModal({
     onSuccess: (saved) => {
       void qc.invalidateQueries({ queryKey: clientsKeys.all })
       void qc.invalidateQueries({ queryKey: ['dashboard'] })
-      toast.success(client ? 'Cliente atualizado' : 'Cliente cadastrado')
+      if (client) toast.success('Cliente atualizado')
       onClose()
-      if (!client) onCreated?.(saved as ClientWithKey)
+      if (!client) onCreated?.(saved)
     },
     onError: (e) => toast.error(getErrorMessage(e)),
   })
@@ -125,21 +133,48 @@ export function ClientFormModal({
             Cancelar
           </Button>
           <Button type="submit" form="client-form" loading={save.isPending}>
-            {client ? 'Salvar' : 'Cadastrar'}
+            {client ? 'Salvar' : automatic ? (save.isPending ? 'Criando instalação...' : 'Cadastrar e criar instalação') : 'Cadastrar'}
           </Button>
         </>
       }
     >
-      <form id="client-form" noValidate onSubmit={form.handleSubmit((v) => save.mutate(v))} className="grid grid-cols-1 gap-4 sm:grid-cols-6">
+      <form
+        id="client-form"
+        noValidate
+        onSubmit={form.handleSubmit((v) => {
+          if (!automatic && !z.url().safeParse(v.url).success) {
+            form.setError('url', { message: 'Endereço inválido (inclua https://)' })
+            return
+          }
+          save.mutate(v)
+        })}
+        className="grid grid-cols-1 gap-4 sm:grid-cols-6"
+      >
+        {!client && provisioning && (
+          <div className="rounded-xl border border-border p-4 sm:col-span-6">
+            <Switch
+              checked={auto}
+              onChange={setAuto}
+              label="Criar a instalação automaticamente"
+              description="O servidor cria o banco, os segredos e sobe o sistema do cliente. Ao final você recebe o link de convite para enviar ao restaurante."
+            />
+          </div>
+        )}
         <Field label="Nome do restaurante" required error={errors.name?.message} className="sm:col-span-6">
           <Input autoFocus invalid={!!errors.name} {...form.register('name')} />
         </Field>
         <Field label="Identificador (subdomínio)" required error={errors.slug?.message} hint="Identifica a instalação no Hub" className="sm:col-span-2">
           <Input invalid={!!errors.slug} {...form.register('slug')} />
         </Field>
-        <Field label="Endereço da instalação" required error={errors.url?.message} className="sm:col-span-4">
-          <Input invalid={!!errors.url} placeholder="https://cliente.restly.com.br" {...form.register('url')} />
-        </Field>
+        {automatic && provisioning ? (
+          <Field label="Endereço da instalação" hint="Definido pelo servidor a partir do identificador" className="sm:col-span-4">
+            <Input value={managedUrl(provisioning, form.watch('slug') ?? '')} disabled readOnly />
+          </Field>
+        ) : (
+          <Field label="Endereço da instalação" required error={errors.url?.message} className="sm:col-span-4">
+            <Input invalid={!!errors.url} placeholder="https://cliente.restly.com.br" {...form.register('url')} />
+          </Field>
+        )}
         <Field label="Responsável" className="sm:col-span-2">
           <Input {...form.register('ownerName')} />
         </Field>
@@ -197,6 +232,45 @@ export function InstanceKeyModal({ client, onClose }: { client: ClientWithKey | 
           Depois de salvar o .env, reinicie a instalação. Ela aparecerá como <strong className="text-fg">Online</strong> aqui no Hub após a primeira consulta.
         </p>
       </div>
+    </Modal>
+  )
+}
+
+/** Resultado da criação automática: link de convite para enviar ao restaurante (ou o erro). */
+export function SetupLinkModal({ client, onClose }: { client: Client | null; onClose: () => void }) {
+  if (!client) return null
+  const failed = client.provisionStatus === 'FAILED'
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      size="lg"
+      title={
+        <span className="flex items-center gap-2">
+          {failed ? <XCircle size={18} className="text-red-500" /> : <CheckCircle2 size={18} className="text-emerald-500" />}
+          {failed ? 'Não foi possível criar a instalação' : `Instalação criada — ${client.name}`}
+        </span>
+      }
+      footer={<Button onClick={onClose}>{failed ? 'Ver cliente' : 'Concluir'}</Button>}
+    >
+      {failed ? (
+        <div className="space-y-3 text-sm">
+          <p className="text-muted">O cliente foi cadastrado, mas o servidor não conseguiu subir a instalação. Você pode tentar novamente na página do cliente.</p>
+          <pre className="max-h-48 overflow-auto rounded-lg bg-surface-2 p-3 text-xs whitespace-pre-wrap">{client.provisionError}</pre>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <p className="text-sm text-muted">
+            O sistema já está no ar em{' '}
+            <a href={client.url} target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline underline-offset-2">
+              {client.url}
+            </a>
+            . Envie o link abaixo ao responsável: é por ele que o restaurante cria o administrador e faz a configuração inicial.
+          </p>
+          {client.setupUrl && <CopyBlock value={client.setupUrl} label="Copiar link de convite" />}
+          <p className="text-xs text-muted">O link funciona uma única vez e continua disponível na página do cliente até ser usado.</p>
+        </div>
+      )}
     </Modal>
   )
 }

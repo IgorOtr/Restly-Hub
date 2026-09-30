@@ -1,7 +1,23 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Archive, ArchiveRestore, ArrowLeft, Ban, CheckCircle2, ExternalLink, KeyRound, Pencil, RefreshCw, TriangleAlert } from 'lucide-react'
+import {
+  Archive,
+  ArchiveRestore,
+  ArrowLeft,
+  ArrowUpCircle,
+  Ban,
+  CheckCircle2,
+  ExternalLink,
+  KeyRound,
+  Pencil,
+  Play,
+  RefreshCw,
+  RotateCw,
+  Server,
+  Square,
+  TriangleAlert,
+} from 'lucide-react'
 import { getErrorMessage } from '@/lib/api'
 import { formatDate, formatDateTime, formatElapsed, formatMoney, maskPhone } from '@/lib/format'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -11,7 +27,20 @@ import { Badge, StatusBadge } from '@/components/ui/Badge'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { QueryState } from '@/components/ui/States'
 import { useToast } from '@/components/ui/Toast'
-import { clientsApi, clientsKeys, CONNECTION, LICENSE_STATUS, REASONS, type ClientWithKey, type LicenseStatus } from './api'
+import { CopyBlock } from '@/components/ui/CopyBlock'
+import {
+  clientsApi,
+  clientsKeys,
+  CONNECTION,
+  LICENSE_STATUS,
+  PROVISION_STATUS,
+  REASONS,
+  settingsApi,
+  settingsKey,
+  type ClientWithKey,
+  type InstanceAction,
+  type LicenseStatus,
+} from './api'
 import { ClientFormModal, InstanceKeyModal, LicenseModal } from './ClientModals'
 
 const ago = (date: string) => {
@@ -36,7 +65,8 @@ export function ClientDetailPage() {
   const [editing, setEditing] = useState(false)
   const [licenseStatus, setLicenseStatus] = useState<LicenseStatus | null>(null)
   const [newKey, setNewKey] = useState<ClientWithKey | null>(null)
-  const [confirm, setConfirm] = useState<'key' | 'archive' | null>(null)
+  const [confirm, setConfirm] = useState<'key' | 'archive' | 'stop' | null>(null)
+  const settings = useQuery({ queryKey: settingsKey, queryFn: settingsApi.get })
 
   const invalidate = () => {
     void qc.invalidateQueries({ queryKey: clientsKeys.all })
@@ -68,6 +98,24 @@ export function ClientDetailPage() {
       invalidate()
       setConfirm(null)
       toast.success('Cliente encerrado. A instalação foi bloqueada.')
+    },
+    onError,
+  })
+  const provision = useMutation({
+    mutationFn: () => clientsApi.provision(id),
+    onSuccess: (r) => {
+      invalidate()
+      if (r.provisionStatus === 'FAILED') toast.error('Não foi possível criar a instalação. Veja o detalhe do erro.')
+      else toast.success('Instalação criada')
+    },
+    onError,
+  })
+  const instance = useMutation({
+    mutationFn: (action: InstanceAction) => clientsApi.instanceAction(id, action),
+    onSuccess: (_r, action) => {
+      invalidate()
+      setConfirm(null)
+      toast.success(action === 'stop' ? 'Instalação parada' : action === 'start' ? 'Instalação iniciada' : 'Instalação atualizada')
     },
     onError,
   })
@@ -201,12 +249,62 @@ export function ClientDetailPage() {
                       <code className="text-xs">{c.instanceKeyPrefix}…</code>
                     </Info>
                   </dl>
-                  <div className="border-t border-border p-4">
-                    <Button variant="secondary" size="sm" icon={KeyRound} onClick={() => setConfirm('key')}>
-                      Gerar nova chave
-                    </Button>
-                  </div>
+                  {c.managed ? (
+                    <div className="space-y-3 border-t border-border p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-muted">Gerenciada pelo Hub</span>
+                        <StatusBadge status={c.provisionStatus} map={PROVISION_STATUS} />
+                      </div>
+                      {c.provisionStatus === 'FAILED' && (
+                        <>
+                          <pre className="max-h-40 overflow-auto rounded-lg bg-red-500/10 p-3 text-xs whitespace-pre-wrap text-red-700 dark:text-red-300">
+                            {c.provisionError ?? 'Falha desconhecida'}
+                          </pre>
+                          <Button size="sm" icon={RotateCw} loading={provision.isPending} onClick={() => provision.mutate()}>
+                            Tentar criar novamente
+                          </Button>
+                        </>
+                      )}
+                      {(c.provisionStatus === 'RUNNING' || c.provisionStatus === 'STOPPED') && (
+                        <div className="flex flex-wrap gap-2">
+                          {c.provisionStatus === 'RUNNING' ? (
+                            <Button variant="secondary" size="sm" icon={Square} loading={instance.isPending && instance.variables === 'stop'} onClick={() => setConfirm('stop')}>
+                              Parar
+                            </Button>
+                          ) : (
+                            <Button variant="success" size="sm" icon={Play} loading={instance.isPending && instance.variables === 'start'} onClick={() => instance.mutate('start')}>
+                              Iniciar
+                            </Button>
+                          )}
+                          <Button variant="secondary" size="sm" icon={ArrowUpCircle} loading={instance.isPending && instance.variables === 'redeploy'} onClick={() => instance.mutate('redeploy')}>
+                            Atualizar versão
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2 border-t border-border p-4">
+                      <Button variant="secondary" size="sm" icon={KeyRound} onClick={() => setConfirm('key')}>
+                        Gerar nova chave
+                      </Button>
+                      {c.connection === 'NEVER' && settings.data?.provisioning && (
+                        <Button size="sm" icon={Server} loading={provision.isPending} onClick={() => provision.mutate()}>
+                          Criar instalação neste servidor
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </Card>
+
+                {c.setupUrl && (
+                  <Card>
+                    <CardHeader title="Convite pendente" description="O restaurante ainda não criou o administrador" />
+                    <div className="space-y-2 p-4">
+                      <CopyBlock value={c.setupUrl} label="Copiar link de convite" />
+                      <p className="text-xs text-muted">Envie ao responsável. O link deixa de valer assim que o administrador for criado.</p>
+                    </div>
+                  </Card>
+                )}
 
                 <Card>
                   <CardHeader title="Cliente" description={`#${c.clientNumber} · desde ${formatDate(c.createdAt)}`} />
@@ -242,6 +340,15 @@ export function ClientDetailPage() {
               description="A chave atual deixa de funcionar. A instalação ficará sem comunicação (mantendo o status atual) até receber a nova chave no .env."
               confirmLabel="Gerar nova chave"
               variant="primary"
+            />
+            <ConfirmDialog
+              open={confirm === 'stop'}
+              onClose={() => setConfirm(null)}
+              onConfirm={() => instance.mutate('stop')}
+              loading={instance.isPending}
+              title="Parar instalação"
+              description={`O sistema de ${c.name} ficará fora do ar (inclusive o cardápio do QR Code) até ser iniciado novamente. Os dados são preservados.`}
+              confirmLabel="Parar"
             />
             <ConfirmDialog
               open={confirm === 'archive'}

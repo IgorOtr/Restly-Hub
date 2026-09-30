@@ -3,6 +3,15 @@ import type { StatusMeta } from '@/components/ui/Badge'
 
 export type LicenseStatus = 'ACTIVE' | 'WARNING' | 'BLOCKED'
 export type Connection = 'ONLINE' | 'OFFLINE' | 'NEVER'
+export type ProvisionStatus = 'NONE' | 'PROVISIONING' | 'RUNNING' | 'STOPPED' | 'FAILED'
+
+export const PROVISION_STATUS: Record<ProvisionStatus, StatusMeta> = {
+  NONE: { label: 'Instalação manual', tone: 'neutral' },
+  PROVISIONING: { label: 'Criando...', tone: 'info' },
+  RUNNING: { label: 'Em execução', tone: 'success' },
+  STOPPED: { label: 'Parada', tone: 'warning' },
+  FAILED: { label: 'Falha na criação', tone: 'danger' },
+}
 
 export const LICENSE_STATUS: Record<LicenseStatus, StatusMeta> = {
   ACTIVE: { label: 'Ativo', tone: 'success' },
@@ -49,6 +58,13 @@ export interface Client {
   createdAt: string
   archivedAt: string | null
   connection: Connection
+  /** Instalação criada e gerenciada pelo Hub (via agente). */
+  managed: boolean
+  provisionStatus: ProvisionStatus
+  provisionError: string | null
+  needsSetup: boolean | null
+  /** Link de convite para o restaurante criar o administrador (enquanto pendente). */
+  setupUrl: string | null
 }
 
 export interface LicenseEvent {
@@ -68,10 +84,13 @@ export interface ClientDetail extends Client {
 /** Resposta de criação/regeneração: a chave da instalação só aparece aqui. */
 export type ClientWithKey = Client & { instanceKey: string }
 
+export type InstanceAction = 'start' | 'stop' | 'redeploy'
+
 export interface ClientInput {
   name: string
   slug: string
-  url: string
+  url?: string
+  provision?: boolean
   document?: string
   ownerName?: string
   ownerPhone?: string
@@ -109,7 +128,11 @@ export const clientsKeys = {
 export const clientsApi = {
   list: (f: ClientsFilter) => api.get<Paginated<Client>>('/clients', { params: { ...f, pageSize: 25 } }).then((r) => r.data),
   get: (id: string) => api.get<ClientDetail>(`/clients/${id}`).then((r) => r.data),
-  create: (d: ClientInput) => api.post<ClientWithKey>('/clients', d).then((r) => r.data),
+  // Com provision = true o servidor cria a instalação (pode levar até alguns minutos).
+  create: (d: ClientInput) => api.post<ClientWithKey | Client>('/clients', d, { timeout: 300_000 }).then((r) => r.data),
+  provision: (id: string) => api.post<Client>(`/clients/${id}/provision`, null, { timeout: 300_000 }).then((r) => r.data),
+  instanceAction: (id: string, action: InstanceAction) =>
+    api.post<Client>(`/clients/${id}/instance/${action}`, null, { timeout: 300_000 }).then((r) => r.data),
   update: (id: string, d: Partial<ClientInput>) => api.patch<Client>(`/clients/${id}`, d).then((r) => r.data),
   setLicense: (id: string, d: LicenseInput) => api.put<{ client: Client; sync: SyncResult }>(`/clients/${id}/license`, d).then((r) => r.data),
   sync: (id: string) => api.post<SyncResult>(`/clients/${id}/sync`).then((r) => r.data),
@@ -122,7 +145,12 @@ export interface HubSettings {
   supportContact: { name: string | null; phone: string | null; email: string | null; url: string | null }
   hubPublicKey: string
   hubPublicUrl: string | null
+  /** Servidor de instalações disponível para criação automática (null = indisponível). */
+  provisioning: { domain: string; scheme: string; publicPort: string; backendImage: string; tls: boolean } | null
 }
+
+export const managedUrl = (p: NonNullable<HubSettings['provisioning']>, slug: string) =>
+  `${p.scheme}://${slug || 'cliente'}.${p.domain}${p.publicPort ? `:${p.publicPort}` : ''}`
 
 export const settingsKey = ['settings'] as const
 

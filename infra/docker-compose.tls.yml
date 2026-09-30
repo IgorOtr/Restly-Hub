@@ -1,0 +1,36 @@
+# HTTPS com certificados automáticos (Let's Encrypt, um por subdomínio).
+# Uso: docker compose -f docker-compose.yml -f docker-compose.tls.yml up -d
+# Requer: DNS curinga (*.seu-dominio) apontando para o servidor e portas 80/443 abertas.
+# ATENÇÃO: configuração ainda não validada em servidor real.
+services:
+  traefik:
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=restly-edge
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.le.acme.email=${ACME_EMAIL:?defina ACME_EMAIL}
+      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
+      - --log.level=WARN
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - letsencrypt:/letsencrypt
+
+  web:
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.restly-web.rule=HostRegexp(`^[a-z0-9-]+\.${BASE_DOMAIN_REGEX}$$`)
+      - traefik.http.routers.restly-web.priority=1
+      - traefik.http.routers.restly-web.entrypoints=websecure
+      - traefik.http.routers.restly-web.tls.certresolver=le
+      - traefik.http.services.restly-web.loadbalancer.server.port=80
+
+volumes:
+  letsencrypt:

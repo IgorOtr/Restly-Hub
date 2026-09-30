@@ -37,6 +37,8 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN}
       HUB_PUBLIC_URL: ${HUB_PUBLIC_URL}
       # Recomendado em produção: manter a chave fora do banco (e com backup seguro).
+      AGENT_URL: ${AGENT_URL:-}
+      AGENT_TOKEN: ${AGENT_TOKEN:-}
       HUB_SIGNING_PRIVATE_KEY: ${HUB_SIGNING_PRIVATE_KEY:-}
       TRUST_PROXY: '1'
       COOKIE_SECURE: ${COOKIE_SECURE:-true}

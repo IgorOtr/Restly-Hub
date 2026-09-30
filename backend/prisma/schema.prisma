@@ -18,6 +18,14 @@ enum LicenseStatus {
   BLOCKED
 }
 
+enum ProvisionStatus {
+  NONE // instalação feita manualmente (fora do controle do agente)
+  PROVISIONING
+  RUNNING
+  STOPPED
+  FAILED
+}
+
 // ───────────────────────── Acesso ao Hub ─────────────────────────
 
 // Operadores do Hub (você e, futuramente, sua equipe). Todos têm acesso total.
@@ -83,6 +91,15 @@ model Client {
   // Credencial da instalação: só o hash é guardado; a chave é exibida uma única vez.
   instanceKeyHash   String @db.Char(64)
   instanceKeyPrefix String @db.VarChar(12)
+
+  // Instalação criada e gerenciada pelo agente de provisionamento.
+  managed         Boolean         @default(false)
+  provisionStatus ProvisionStatus @default(NONE)
+  provisionError  String?         @db.Text
+  // Convite para o restaurante criar o administrador (descartado após o uso).
+  setupToken      String?         @db.VarChar(64)
+  // Informado pela instalação: ainda não há administrador cadastrado.
+  needsSetup      Boolean?
 
   // Última comunicação da instalação (monitoramento).
   lastCheckAt      DateTime?

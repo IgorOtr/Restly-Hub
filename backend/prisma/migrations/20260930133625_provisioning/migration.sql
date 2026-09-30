@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE `Client` ADD COLUMN `managed` BOOLEAN NOT NULL DEFAULT false,
+    ADD COLUMN `needsSetup` BOOLEAN NULL,
+    ADD COLUMN `provisionError` TEXT NULL,
+    ADD COLUMN `provisionStatus` ENUM('NONE', 'PROVISIONING', 'RUNNING', 'STOPPED', 'FAILED') NOT NULL DEFAULT 'NONE',
+    ADD COLUMN `setupToken` VARCHAR(64) NULL;

@@ -1,6 +1,12 @@
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  OmitType,
+  PartialType,
+} from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsDateString,
   IsEmail,
   IsEnum,
@@ -46,7 +52,19 @@ export class CreateClientDto {
   })
   slug: string;
 
-  @ApiProperty({ example: 'https://terragaucha.restly.com.br' })
+  @ApiPropertyOptional({
+    description: 'Cria a instalação automaticamente no servidor (via agente)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  provision?: boolean;
+
+  @ApiProperty({
+    example: 'https://terragaucha.restly.com.br',
+    description:
+      'Dispensado quando provision = true (o endereço é definido pelo servidor)',
+  })
+  @ValidateIf((o: CreateClientDto) => !o.provision)
   @Trim()
   @IsUrl(
     {
@@ -57,7 +75,7 @@ export class CreateClientDto {
     { message: 'Endereço da instalação inválido' },
   )
   @MaxLength(255)
-  url: string;
+  url?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -112,7 +130,9 @@ export class CreateClientDto {
   dueDay?: number | null;
 }
 
-export class UpdateClientDto extends PartialType(CreateClientDto) {}
+export class UpdateClientDto extends PartialType(
+  OmitType(CreateClientDto, ['provision'] as const),
+) {}
 
 export class SetLicenseDto {
   @ApiProperty({ enum: LicenseStatus })

@@ -10,6 +10,7 @@ export interface LicenseCheckInput {
   instanceId: string;
   nonce: string;
   version?: string | null;
+  needsSetup?: boolean;
   key: string | undefined;
   ip?: string;
 }
@@ -42,6 +43,11 @@ export class LicensesService {
         lastCheckAt: new Date(),
         lastCheckIp: input.ip ?? null,
         lastVersion: input.version?.slice(0, 40) ?? null,
+        ...(input.needsSetup !== undefined && {
+          needsSetup: input.needsSetup,
+          // Administrador criado: o convite não tem mais utilidade.
+          ...(input.needsSetup === false && { setupToken: null }),
+        }),
       },
     });
 

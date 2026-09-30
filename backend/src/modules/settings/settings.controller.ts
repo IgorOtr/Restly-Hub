@@ -10,6 +10,7 @@ import {
   Matches,
   MaxLength,
 } from 'class-validator';
+import { ProvisioningService } from '../provisioning/provisioning.service';
 import { SigningService } from '../signing/signing.service';
 import { SettingsService } from './settings.service';
 
@@ -55,6 +56,7 @@ export class SettingsController {
     private readonly settings: SettingsService,
     private readonly signing: SigningService,
     private readonly config: ConfigService,
+    private readonly provisioning: ProvisioningService,
   ) {}
 
   @Get()
@@ -64,6 +66,8 @@ export class SettingsController {
       // Dados usados para configurar cada instalação (variáveis LICENSE_*).
       hubPublicKey: this.signing.publicKey(),
       hubPublicUrl: this.config.get<string>('HUB_PUBLIC_URL') ?? null,
+      // Criação automática de instalações (null = agente não configurado/indisponível).
+      provisioning: await this.provisioning.health(),
     };
   }
 

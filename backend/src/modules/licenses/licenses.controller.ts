@@ -2,6 +2,7 @@ import { Body, Controller, HttpCode, Post, Req } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiTags } from '@nestjs/swagger';
 import {
+  IsBoolean,
   IsOptional,
   IsString,
   Matches,
@@ -26,6 +27,11 @@ class LicenseCheckDto {
   @IsString()
   @MaxLength(40)
   version?: string | null;
+
+  /** A instalação ainda não tem administrador cadastrado. */
+  @IsOptional()
+  @IsBoolean()
+  needsSetup?: boolean;
 }
 
 @ApiTags('licenses')

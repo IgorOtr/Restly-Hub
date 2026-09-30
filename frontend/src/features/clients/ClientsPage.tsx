@@ -14,7 +14,7 @@ import { DataTable, type Column } from '@/components/ui/DataTable'
 import { Pagination } from '@/components/ui/Pagination'
 import { EmptyState } from '@/components/ui/States'
 import { clientsApi, clientsKeys, CONNECTION, LICENSE_STATUS, type Client, type ClientWithKey, type LicenseStatus } from './api'
-import { ClientFormModal, InstanceKeyModal } from './ClientModals'
+import { ClientFormModal, InstanceKeyModal, SetupLinkModal } from './ClientModals'
 
 type Filter = LicenseStatus | 'ALL' | 'ARCHIVED'
 
@@ -24,7 +24,7 @@ export function ClientsPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<Filter>('ALL')
   const [formOpen, setFormOpen] = useState(false)
-  const [created, setCreated] = useState<ClientWithKey | null>(null)
+  const [created, setCreated] = useState<Client | ClientWithKey | null>(null)
   const debounced = useDebounced(search)
 
   const params = {
@@ -39,6 +39,12 @@ export function ClientsPage() {
     placeholderData: keepPreviousData,
     refetchInterval: 30_000,
   })
+
+  const closeCreated = () => {
+    const id = created?.id
+    setCreated(null)
+    if (id) navigate(`/clients/${id}`)
+  }
 
   const columns: Column<Client>[] = [
     {
@@ -132,14 +138,9 @@ export function ClientsPage() {
       </Card>
 
       <ClientFormModal open={formOpen} client={null} onClose={() => setFormOpen(false)} onCreated={setCreated} />
-      <InstanceKeyModal
-        client={created}
-        onClose={() => {
-          const id = created?.id
-          setCreated(null)
-          if (id) navigate(`/clients/${id}`)
-        }}
-      />
+      {/* Instalação automática → link de convite; instalação manual → chave e variáveis. */}
+      <SetupLinkModal client={created?.managed ? created : null} onClose={closeCreated} />
+      <InstanceKeyModal client={created && !created.managed ? (created as ClientWithKey) : null} onClose={closeCreated} />
     </>
   )
 }

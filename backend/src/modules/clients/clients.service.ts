@@ -1,12 +1,19 @@
 import {
   ConflictException,
+  ServiceUnavailableException,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { createHash, randomBytes } from 'node:crypto';
 import { Prisma, type Client } from '#prisma-client';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
+import {
+  ProvisioningService,
+  type InstanceAction,
+} from '../provisioning/provisioning.service';
+import { SigningService } from '../signing/signing.service';
 import { paginate, skipTake } from '../../common/dto/pagination.dto';
 import type {
   CreateClientDto,
@@ -39,16 +46,30 @@ export function connectionOf(
     : 'OFFLINE';
 }
 
-/** Nunca expõe o hash da chave da instalação. */
-function present({ instanceKeyHash: _hash, ...c }: Client) {
-  return { ...c, connection: connectionOf(c.lastCheckAt) };
+/** Nunca expõe o hash da chave nem o convite cru; o link de convite só existe enquanto pendente. */
+function present({ instanceKeyHash: _hash, setupToken, ...c }: Client) {
+  return {
+    ...c,
+    connection: connectionOf(c.lastCheckAt),
+    setupUrl:
+      c.managed && setupToken && c.needsSetup !== false
+        ? `${c.url}/setup?token=${encodeURIComponent(setupToken)}`
+        : null,
+  };
 }
+
+const newSetupToken = () => randomBytes(32).toString('base64url');
 
 @Injectable()
 export class ClientsService {
   private readonly logger = new Logger('Clients');
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly provisioning: ProvisioningService,
+    private readonly signing: SigningService,
+    private readonly config: ConfigService,
+  ) {}
 
   async list(q: ListClientsQueryDto) {
     const where: Prisma.ClientWhereInput = {
@@ -89,20 +110,118 @@ export class ClientsService {
     return { ...present(rest), events };
   }
 
-  async create(dto: CreateClientDto, userId: string) {
+  async create({ provision, ...dto }: CreateClientDto, userId: string) {
     await this.assertSlugFree(dto.slug);
     const key = newInstanceKey();
+    const url = provision
+      ? this.provisioning.instanceUrl(await this.agentOrThrow(), dto.slug)
+      : dto.url!.replace(/\/+$/, '');
     const client = await this.prisma.client.create({
       data: {
         ...dto,
-        url: dto.url.replace(/\/+$/, ''),
+        url,
         instanceKeyHash: key.hash,
         instanceKeyPrefix: key.prefix,
+        ...(provision && {
+          managed: true,
+          provisionStatus: 'PROVISIONING',
+          setupToken: newSetupToken(),
+          needsSetup: true,
+        }),
         events: { create: { fromStatus: null, toStatus: 'ACTIVE', userId } },
       },
     });
+    if (provision) return this.runProvision(client, key.key);
     // A chave só é devolvida neste momento; depois, apenas regenerando.
     return { ...present(client), instanceKey: key.key };
+  }
+
+  /**
+   * (Re)cria a instalação no servidor: usado para tentar de novo após falha ou
+   * para passar a gerenciar um cliente cadastrado manualmente.
+   */
+  async provision(id: string) {
+    const before = await this.findOrThrow(id);
+    if (before.managed && before.provisionStatus !== 'FAILED')
+      throw new ConflictException('A instalação deste cliente já foi criada');
+    const health = await this.agentOrThrow();
+    // Nova chave e novo convite: os anteriores nunca chegaram a uma instalação.
+    const key = newInstanceKey();
+    const client = await this.prisma.client.update({
+      where: { id },
+      data: {
+        url: this.provisioning.instanceUrl(health, before.slug),
+        managed: true,
+        provisionStatus: 'PROVISIONING',
+        provisionError: null,
+        setupToken: newSetupToken(),
+        needsSetup: true,
+        instanceKeyHash: key.hash,
+        instanceKeyPrefix: key.prefix,
+      },
+    });
+    return this.runProvision(client, key.key);
+  }
+
+  private async runProvision(client: Client, instanceKey: string) {
+    try {
+      await this.provisioning.provision({
+        slug: client.slug,
+        setupToken: client.setupToken!,
+        license: {
+          hubUrl: this.config.getOrThrow<string>('HUB_PUBLIC_URL'),
+          instanceId: client.slug,
+          instanceKey,
+          hubPublicKey: this.signing.publicKey(),
+        },
+      });
+      return present(
+        await this.prisma.client.update({
+          where: { id: client.id },
+          data: { provisionStatus: 'RUNNING', provisionError: null },
+        }),
+      );
+    } catch (e) {
+      const detail = e instanceof Error ? e.message : String(e);
+      this.logger.error(`Provisionamento de ${client.slug} falhou: ${detail}`);
+      // O cliente fica cadastrado; a criação pode ser repetida.
+      return present(
+        await this.prisma.client.update({
+          where: { id: client.id },
+          data: {
+            provisionStatus: 'FAILED',
+            provisionError: detail.slice(0, 2000),
+          },
+        }),
+      );
+    }
+  }
+
+  /** Iniciar, parar ou atualizar (recriar com a imagem atual) a instalação gerenciada. */
+  async instanceAction(id: string, action: Exclude<InstanceAction, 'sync'>) {
+    const client = await this.findOrThrow(id);
+    if (
+      !client.managed ||
+      client.provisionStatus === 'FAILED' ||
+      client.provisionStatus === 'PROVISIONING'
+    )
+      throw new ConflictException('Esta instalação não é gerenciada pelo Hub');
+    await this.provisioning.action(client.slug, action);
+    return present(
+      await this.prisma.client.update({
+        where: { id },
+        data: { provisionStatus: action === 'stop' ? 'STOPPED' : 'RUNNING' },
+      }),
+    );
+  }
+
+  private async agentOrThrow() {
+    const health = await this.provisioning.health();
+    if (!health)
+      throw new ServiceUnavailableException(
+        'O servidor de instalações não está disponível para criação automática',
+      );
+    return health;
   }
 
   async update(id: string, dto: UpdateClientDto) {
@@ -210,8 +329,15 @@ export class ClientsService {
    * É apenas um atalho — se a instalação estiver inacessível, ela aplicará a
    * mudança na próxima consulta periódica.
    */
-  private async requestSync(client: Pick<Client, 'url' | 'slug'>) {
+  private async requestSync(
+    client: Pick<Client, 'url' | 'slug' | 'managed' | 'provisionStatus'>,
+  ) {
     try {
+      // Instalações gerenciadas são avisadas pela rede interna, via agente.
+      if (client.managed && client.provisionStatus === 'RUNNING') {
+        await this.provisioning.action(client.slug, 'sync');
+        return { ok: true as const };
+      }
       const res = await fetch(`${client.url}/api/license/refresh`, {
         method: 'POST',
         signal: AbortSignal.timeout(SYNC_TIMEOUT_MS),
