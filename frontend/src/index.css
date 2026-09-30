@@ -1,0 +1,135 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+
+/* dark: vale dentro de .dark, exceto em trechos forçados para o modo claro (.light). */
+@custom-variant dark (&:where(.dark, .dark *):not(:where(.light, .light *)));
+
+/* Tokens semânticos: toda a UI usa estas cores, que mudam no dark mode. */
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-fg: var(--primary-fg);
+  --color-primary-soft: var(--primary-soft);
+  --color-ring: var(--ring);
+  --color-secondary: var(--secondary);
+  --color-secondary-fg: var(--secondary-fg);
+  --color-secondary-soft: var(--secondary-soft);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-grid: var(--grid);
+}
+
+:root,
+.light {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f3f4f6;
+  --surface-3: #e9ebef;
+  --border: #e4e6eb;
+  --border-strong: #d1d5db;
+  --fg: #111827;
+  --muted: #6b7280;
+  --subtle: #9ca3af;
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-fg: #ffffff;
+  --primary-soft: #eef2ff;
+  --ring: #6366f1;
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --secondary: #2a78d6;
+  --secondary-fg: #ffffff;
+  --secondary-soft: rgb(42 120 214 / 0.12);
+  --chart-1: var(--secondary);
+  --chart-2: #eb6834;
+  --grid: #eceef1;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0b0d12;
+  --surface: #13161d;
+  --surface-2: #1a1e27;
+  --surface-3: #242935;
+  --border: #262b36;
+  --border-strong: #353b49;
+  --fg: #e8eaef;
+  --muted: #9aa1ae;
+  --subtle: #6b7280;
+  --primary: #6366f1;
+  --primary-hover: #818cf8;
+  --primary-fg: #ffffff;
+  --primary-soft: rgb(99 102 241 / 0.14);
+  --ring: #818cf8;
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239aa1ae' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  --secondary: #3987e5;
+  --secondary-fg: #ffffff;
+  --secondary-soft: rgb(57 135 229 / 0.16);
+  --chart-1: var(--secondary);
+  --chart-2: #d95926;
+  --grid: #232834;
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+/* Select com seta própria: espaçamento consistente e cor que acompanha o tema. */
+select.select-control {
+  appearance: none;
+  background-image: var(--select-chevron);
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}
+
+/* Remove as setas nativas de campos numéricos (ficam coladas na borda). */
+input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Ícone do calendário discreto e alinhado ao tema. */
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.55;
+  margin-left: 0.25rem;
+}
+input[type='date']::-webkit-calendar-picker-indicator:hover {
+  opacity: 0.9;
+}
+
+body {
+  @apply bg-bg font-sans text-fg antialiased;
+}
+
+::selection {
+  background: rgb(99 102 241 / 0.25);
+}
+
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

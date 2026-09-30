@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum RecordStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum LicenseStatus {
+  ACTIVE
+  WARNING
+  BLOCKED
+}
+
+// ───────────────────────── Acesso ao Hub ─────────────────────────
+
+// Operadores do Hub (você e, futuramente, sua equipe). Todos têm acesso total.
+model HubUser {
+  id                  String       @id @default(uuid()) @db.Char(36)
+  name                String       @db.VarChar(120)
+  email               String       @unique @db.VarChar(160)
+  passwordHash        String       @db.VarChar(255)
+  status              RecordStatus @default(ACTIVE)
+  failedLoginAttempts Int          @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  sessions HubSession[]
+  events   LicenseEvent[]
+}
+
+model HubSession {
+  id               String    @id @default(uuid()) @db.Char(36)
+  userId           String    @db.Char(36)
+  refreshTokenHash String    @unique @db.Char(64)
+  userAgent        String?   @db.VarChar(255)
+  ip               String?   @db.VarChar(64)
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  lastUsedAt       DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+  user             HubUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ───────────────────────────── Clientes ─────────────────────────────
+
+// Cada cliente corresponde a uma instalação independente do Restly.
+model Client {
+  id           String  @id @default(uuid()) @db.Char(36)
+  clientNumber Int     @unique @default(autoincrement())
+  name         String  @db.VarChar(160)
+  // Identificador da instalação (LICENSE_INSTANCE_ID) e subdomínio.
+  slug         String  @unique @db.VarChar(60)
+  // Endereço da instalação (ex.: https://terragaucha.restly.com.br).
+  url          String  @db.VarChar(255)
+  document     String? @db.VarChar(14)
+  ownerName    String? @db.VarChar(120)
+  ownerPhone   String? @db.VarChar(20)
+  ownerEmail   String? @db.VarChar(160)
+  notes        String? @db.Text
+
+  // Comercial (cobrança automática fica para uma etapa futura).
+  monthlyFee Decimal @default(0) @db.Decimal(10, 2)
+  dueDay     Int?
+
+  // Licença atual.
+  status           LicenseStatus @default(ACTIVE)
+  reason           String?       @db.VarChar(80)
+  message          String?       @db.Text
+  dueDate          DateTime?
+  statusChangedAt  DateTime      @default(now())
+
+  // Credencial da instalação: só o hash é guardado; a chave é exibida uma única vez.
+  instanceKeyHash   String @db.Char(64)
+  instanceKeyPrefix String @db.VarChar(12)
+
+  // Última comunicação da instalação (monitoramento).
+  lastCheckAt      DateTime?
+  lastCheckIp      String?   @db.VarChar(64)
+  lastVersion      String?   @db.VarChar(40)
+
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  // Cliente encerrado: a instalação passa a receber BLOCKED (contrato encerrado).
+  archivedAt DateTime?
+
+  events LicenseEvent[]
+
+  @@index([status])
+  @@index([archivedAt])
+  @@index([lastCheckAt])
+}
+
+// Histórico de mudanças de licença (quem, quando e por quê).
+model LicenseEvent {
+  id         String         @id @default(uuid()) @db.Char(36)
+  clientId   String         @db.Char(36)
+  fromStatus LicenseStatus?
+  toStatus   LicenseStatus
+  reason     String?        @db.VarChar(80)
+  message    String?        @db.Text
+  userId     String?        @db.Char(36)
+  createdAt  DateTime       @default(now())
+
+  client Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  user   HubUser? @relation(fields: [userId], references: [id])
+
+  @@index([clientId, createdAt])
+  @@index([createdAt])
+}
+
+// Configurações do Hub (chave de assinatura, contato padrão etc.).
+model Setting {
+  key       String   @id @db.VarChar(80)
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+}

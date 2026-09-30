@@ -1,0 +1,13 @@
+# Nunca enviar para a imagem: dependências/artefatos do host, segredos e dados.
+.git
+**/node_modules
+**/dist
+**/coverage
+backend/generated
+backend/uploads
+uploads
+**/.env
+**/.env.*
+!**/.env.example
+**/.DS_Store
+**/* 2.*
