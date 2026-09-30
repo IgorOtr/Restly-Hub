@@ -4,4 +4,5 @@ COPY frontend/package*.json ./
 RUN npm install
 COPY frontend .
 EXPOSE 5174
-CMD ["npm", "run", "dev", "--", "--host"]
+# npm install na subida: dependências novas entram sem reconstruir a imagem.
+CMD ["sh", "-c", "npm install --no-audit --no-fund && npm run dev -- --host"]
