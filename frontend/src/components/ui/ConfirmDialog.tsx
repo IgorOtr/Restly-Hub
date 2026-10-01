@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { Modal } from './Modal'
 import { Button, type ButtonVariant } from './Button'
-import { Field, Textarea } from './Field'
+import { Field, Input, Textarea } from './Field'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -15,6 +15,8 @@ interface ConfirmDialogProps {
   /** Exige um motivo (ex.: cancelamentos). */
   requireReason?: boolean
   reasonLabel?: string
+  /** Exige digitar exatamente este texto para confirmar (ações críticas). */
+  confirmText?: string
 }
 
 /** Confirmação para ações destrutivas/irreversíveis, com motivo opcional. */
@@ -29,12 +31,15 @@ export function ConfirmDialog({
   loading,
   requireReason,
   reasonLabel = 'Motivo',
+  confirmText,
 }: ConfirmDialogProps) {
   const [reason, setReason] = useState('')
-  const invalid = requireReason && reason.trim().length < 3
+  const [typed, setTyped] = useState('')
+  const invalid = (requireReason && reason.trim().length < 3) || (confirmText !== undefined && typed.trim() !== confirmText)
 
   const close = () => {
     setReason('')
+    setTyped('')
     onClose()
   }
 
@@ -56,6 +61,11 @@ export function ConfirmDialog({
       }
     >
       {description && <div className="text-sm text-muted">{description}</div>}
+      {confirmText !== undefined && (
+        <Field label={`Digite "${confirmText}" para confirmar`} className="mt-4">
+          <Input value={typed} onChange={(e) => setTyped(e.target.value)} autoFocus autoComplete="off" />
+        </Field>
+      )}
       {requireReason && (
         <Field label={reasonLabel} required className="mt-4">
           <Textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={255} autoFocus placeholder="Descreva o motivo" />

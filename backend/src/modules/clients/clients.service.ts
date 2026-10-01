@@ -137,12 +137,17 @@ export class ClientsService {
   }
 
   /**
-   * (Re)cria a instalação no servidor: usado para tentar de novo após falha ou
-   * para passar a gerenciar um cliente cadastrado manualmente.
+   * (Re)cria a instalação no servidor: após falha, após remoção (o banco e os
+   * arquivos preservados são reaproveitados) ou para passar a gerenciar um
+   * cliente cadastrado manualmente.
    */
   async provision(id: string) {
     const before = await this.findOrThrow(id);
-    if (before.managed && before.provisionStatus !== 'FAILED')
+    if (
+      before.managed &&
+      before.provisionStatus !== 'FAILED' &&
+      before.provisionStatus !== 'REMOVED'
+    )
       throw new ConflictException('A instalação deste cliente já foi criada');
     const health = await this.agentOrThrow();
     // Nova chave e novo convite: os anteriores nunca chegaram a uma instalação.
@@ -198,14 +203,12 @@ export class ClientsService {
   }
 
   /** Iniciar, parar ou atualizar (recriar com a imagem atual) a instalação gerenciada. */
-  async instanceAction(id: string, action: Exclude<InstanceAction, 'sync'>) {
+  async instanceAction(
+    id: string,
+    action: Exclude<InstanceAction, 'sync' | 'remove'>,
+  ) {
     const client = await this.findOrThrow(id);
-    if (
-      !client.managed ||
-      client.provisionStatus === 'FAILED' ||
-      client.provisionStatus === 'PROVISIONING'
-    )
-      throw new ConflictException('Esta instalação não é gerenciada pelo Hub');
+    this.assertControllable(client);
     await this.provisioning.action(client.slug, action);
     return present(
       await this.prisma.client.update({
@@ -213,6 +216,36 @@ export class ClientsService {
         data: { provisionStatus: action === 'stop' ? 'STOPPED' : 'RUNNING' },
       }),
     );
+  }
+
+  /**
+   * Remove o container da instalação, preservando banco e arquivos. Exige a
+   * instalação parada ou o cliente encerrado, para não derrubar quem está em uso.
+   */
+  async removeInstance(id: string, userId: string) {
+    const client = await this.findOrThrow(id);
+    this.assertControllable(client);
+    if (client.provisionStatus !== 'STOPPED' && !client.archivedAt)
+      throw new ConflictException(
+        'Pare a instalação ou encerre o cliente antes de removê-la',
+      );
+    await this.provisioning.action(client.slug, 'remove');
+    this.logger.warn(`Instalação de ${client.slug} removida por ${userId}`);
+    return present(
+      await this.prisma.client.update({
+        where: { id },
+        data: { provisionStatus: 'REMOVED', setupToken: null },
+      }),
+    );
+  }
+
+  private assertControllable(client: Client) {
+    if (!client.managed)
+      throw new ConflictException('Esta instalação não é gerenciada pelo Hub');
+    if (!['RUNNING', 'STOPPED'].includes(client.provisionStatus))
+      throw new ConflictException(
+        'A instalação não está disponível para esta ação',
+      );
   }
 
   private async agentOrThrow() {
@@ -304,7 +337,26 @@ export class ClientsService {
       });
     });
     const sync = await this.requestSync(client);
-    return { client: present(client), sync };
+    // Instalação gerenciada: encerrar também para o container (libera memória).
+    if (client.managed && client.provisionStatus === 'RUNNING') {
+      try {
+        await this.provisioning.action(client.slug, 'stop');
+        const stopped = await this.prisma.client.update({
+          where: { id },
+          data: { provisionStatus: 'STOPPED' },
+        });
+        return { client: present(stopped), sync, stopped: true };
+      } catch (e) {
+        const detail = e instanceof Error ? e.message : String(e);
+        return {
+          client: present(client),
+          sync,
+          stopped: false,
+          stopError: detail,
+        };
+      }
+    }
+    return { client: present(client), sync, stopped: false };
   }
 
   async restore(id: string) {
@@ -312,12 +364,25 @@ export class ClientsService {
     if (!before.archivedAt)
       throw new ConflictException('Cliente não está encerrado');
     // Volta bloqueado: a liberação é uma ação explícita do operador.
-    return present(
-      await this.prisma.client.update({
-        where: { id },
-        data: { archivedAt: null },
-      }),
-    );
+    let client = await this.prisma.client.update({
+      where: { id },
+      data: { archivedAt: null },
+    });
+    // A instalação volta a rodar (exibindo o bloqueio até a liberação).
+    if (client.managed && client.provisionStatus === 'STOPPED') {
+      try {
+        await this.provisioning.action(client.slug, 'start');
+        client = await this.prisma.client.update({
+          where: { id },
+          data: { provisionStatus: 'RUNNING' },
+        });
+      } catch (e) {
+        this.logger.warn(
+          `Não foi possível iniciar ${client.slug} ao reativar: ${e instanceof Error ? e.message : e}`,
+        );
+      }
+    }
+    return present(client);
   }
 
   async sync(id: string) {

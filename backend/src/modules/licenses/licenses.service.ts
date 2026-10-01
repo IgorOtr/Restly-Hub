@@ -24,6 +24,24 @@ export class LicensesService {
     private readonly settings: SettingsService,
   ) {}
 
+  /** Contato do próprio cliente, se configurado; senão, o contato geral do Hub. */
+  private async contactFor(client: {
+    supportName: string | null;
+    supportPhone: string | null;
+    supportEmail: string | null;
+    supportUrl: string | null;
+  }) {
+    const own = {
+      name: client.supportName,
+      phone: client.supportPhone,
+      email: client.supportEmail,
+      url: client.supportUrl,
+    };
+    return Object.values(own).some(Boolean)
+      ? own
+      : this.settings.supportContact();
+  }
+
   async check(input: LicenseCheckInput) {
     const client = await this.prisma.client.findUnique({
       where: { slug: input.instanceId },
@@ -60,7 +78,7 @@ export class LicensesService {
       status,
       reason,
       message: client.message ?? defaultLicenseMessage(status, reason),
-      contact: await this.settings.supportContact(),
+      contact: await this.contactFor(client),
       dueDate: client.dueDate?.toISOString() ?? null,
       issuedAt: new Date().toISOString(),
     });

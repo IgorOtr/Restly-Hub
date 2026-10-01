@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE `Client` ADD COLUMN `supportEmail` VARCHAR(160) NULL,
+    ADD COLUMN `supportName` VARCHAR(120) NULL,
+    ADD COLUMN `supportPhone` VARCHAR(20) NULL,
+    ADD COLUMN `supportUrl` VARCHAR(500) NULL,
+    MODIFY `provisionStatus` ENUM('NONE', 'PROVISIONING', 'RUNNING', 'STOPPED', 'FAILED', 'REMOVED') NOT NULL DEFAULT 'NONE';

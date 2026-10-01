@@ -121,6 +121,45 @@ describe('consulta de licença', () => {
   });
 });
 
+describe('contato de suporte na licença', () => {
+  it('usa o contato do cliente quando configurado; senão, o geral', async () => {
+    const own = setup({
+      ...client,
+      supportName: 'Comercial',
+      supportPhone: '24988887777',
+      supportEmail: null,
+      supportUrl: null,
+    });
+    await own.signing.onModuleInit();
+    const a = await own.service.check({
+      instanceId: 'terragaucha',
+      nonce: 'abc12345',
+      key: KEY,
+    });
+    expect(decode(a.payload).contact).toEqual({
+      name: 'Comercial',
+      phone: '24988887777',
+      email: null,
+      url: null,
+    });
+
+    const general = setup({
+      ...client,
+      supportName: null,
+      supportPhone: null,
+      supportEmail: null,
+      supportUrl: null,
+    });
+    await general.signing.onModuleInit();
+    const b = await general.service.check({
+      instanceId: 'terragaucha',
+      nonce: 'abc12345',
+      key: KEY,
+    });
+    expect(decode(b.payload).contact).toMatchObject({ name: 'Suporte' });
+  });
+});
+
 describe('monitoramento da instalação', () => {
   const now = Date.parse('2026-10-01T12:00:00Z');
   it('classifica a comunicação', () => {

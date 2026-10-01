@@ -17,6 +17,7 @@ import {
   type HubAuthUser,
 } from '../../common/decorators/auth.decorators';
 import { ClientsService } from './clients.service';
+import { RedeployJobService } from './redeploy-job.service';
 import {
   CreateClientDto,
   ListClientsQueryDto,
@@ -28,7 +29,22 @@ import {
 @ApiBearerAuth()
 @Controller('clients')
 export class ClientsController {
-  constructor(private readonly clients: ClientsService) {}
+  constructor(
+    private readonly clients: ClientsService,
+    private readonly redeployJob: RedeployJobService,
+  ) {}
+
+  /** Atualiza todas as instalações em execução para a versão atual (em segundo plano). */
+  @HttpCode(202)
+  @Post('instances/redeploy-all')
+  redeployAll() {
+    return this.redeployJob.start();
+  }
+
+  @Get('instances/redeploy-all')
+  redeployAllStatus() {
+    return this.redeployJob.status();
+  }
 
   @Get()
   list(@Query() q: ListClientsQueryDto) {
@@ -64,6 +80,17 @@ export class ClientsController {
   @Post(':id/provision')
   provision(@Param('id', ParseUUIDPipe) id: string) {
     return this.clients.provision(id);
+  }
+
+  // Declarada antes de ':id/instance/:action' para ter precedência.
+  /** Remove o container da instalação (banco e arquivos são preservados). */
+  @HttpCode(200)
+  @Post(':id/instance/remove')
+  removeInstance(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: HubAuthUser,
+  ) {
+    return this.clients.removeInstance(id, user.id);
   }
 
   @HttpCode(200)

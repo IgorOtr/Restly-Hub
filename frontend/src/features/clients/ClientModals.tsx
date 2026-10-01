@@ -48,6 +48,10 @@ const schema = z.object({
   monthlyFee: z.string().refine((v) => !v || !Number.isNaN(parseMoney(v)), 'Valor inválido'),
   dueDay: z.string().refine((v) => !v || (/^\d+$/.test(v) && Number(v) >= 1 && Number(v) <= 31), 'Entre 1 e 31'),
   notes: z.string().max(5000).optional(),
+  supportName: z.string().max(120),
+  supportPhone: z.string().refine((v) => !v || /^\d{10,13}$/.test(digits(v)), 'Telefone inválido'),
+  supportEmail: z.string().refine((v) => !v || z.email().safeParse(v).success, 'E-mail inválido'),
+  supportUrl: z.string().refine((v) => !v || z.url().safeParse(v).success, 'Link inválido (inclua https://)'),
 })
 type FormValues = z.infer<typeof schema>
 
@@ -84,6 +88,10 @@ export function ClientFormModal({
       monthlyFee: client ? formatMoneyInput(client.monthlyFee) : '',
       dueDay: client?.dueDay ? String(client.dueDay) : '',
       notes: client?.notes ?? '',
+      supportName: client?.supportName ?? '',
+      supportPhone: maskPhone(client?.supportPhone ?? ''),
+      supportEmail: client?.supportEmail ?? '',
+      supportUrl: client?.supportUrl ?? '',
     })
   }, [open, client, form])
 
@@ -108,6 +116,11 @@ export function ClientFormModal({
         monthlyFee: v.monthlyFee ? parseMoney(v.monthlyFee) : 0,
         dueDay: v.dueDay ? Number(v.dueDay) : null,
         notes: v.notes || undefined,
+        // Vazio = usa o contato geral do Hub.
+        supportName: v.supportName.trim() || null,
+        supportPhone: digits(v.supportPhone) || null,
+        supportEmail: v.supportEmail.trim() || null,
+        supportUrl: v.supportUrl.trim() || null,
       }
       return client ? clientsApi.update(client.id, data) : clientsApi.create(data)
     },
@@ -201,6 +214,32 @@ export function ClientFormModal({
         <Field label="Observações" className="sm:col-span-6">
           <Textarea rows={2} {...form.register('notes')} />
         </Field>
+        <details
+          className="group rounded-xl border border-border sm:col-span-6"
+          open={Boolean(client?.supportName || client?.supportPhone || client?.supportEmail || client?.supportUrl)}
+        >
+          <summary className="cursor-pointer px-4 py-3 text-sm font-medium">
+            Contato de suporte deste cliente <span className="font-normal text-muted">(opcional — vazio usa o contato geral)</span>
+          </summary>
+          <div className="grid grid-cols-1 gap-4 border-t border-border p-4 sm:grid-cols-2">
+            <Field label="Nome">
+              <Input {...form.register('supportName')} />
+            </Field>
+            <Field label="WhatsApp" error={errors.supportPhone?.message}>
+              <Controller
+                control={form.control}
+                name="supportPhone"
+                render={({ field }) => <Input {...field} inputMode="tel" invalid={!!errors.supportPhone} onChange={(e) => field.onChange(maskPhone(e.target.value))} />}
+              />
+            </Field>
+            <Field label="E-mail" error={errors.supportEmail?.message}>
+              <Input type="email" invalid={!!errors.supportEmail} {...form.register('supportEmail')} />
+            </Field>
+            <Field label="Link para regularização" error={errors.supportUrl?.message}>
+              <Input placeholder="https://" invalid={!!errors.supportUrl} {...form.register('supportUrl')} />
+            </Field>
+          </div>
+        </details>
       </form>
     </Modal>
   )

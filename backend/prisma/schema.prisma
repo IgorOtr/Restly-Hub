@@ -24,6 +24,7 @@ enum ProvisionStatus {
   RUNNING
   STOPPED
   FAILED
+  REMOVED // container removido; banco e arquivos preservados (pode ser recriada)
 }
 
 // ───────────────────────── Acesso ao Hub ─────────────────────────
@@ -76,6 +77,12 @@ model Client {
   ownerPhone   String? @db.VarChar(20)
   ownerEmail   String? @db.VarChar(160)
   notes        String? @db.Text
+
+  // Contato de suporte exibido a este cliente (vazio = contato geral do Hub).
+  supportName  String? @db.VarChar(120)
+  supportPhone String? @db.VarChar(20)
+  supportEmail String? @db.VarChar(160)
+  supportUrl   String? @db.VarChar(500)
 
   // Comercial (cobrança automática fica para uma etapa futura).
   monthlyFee Decimal @default(0) @db.Decimal(10, 2)

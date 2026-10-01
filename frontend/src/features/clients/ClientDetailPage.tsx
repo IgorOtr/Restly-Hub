@@ -16,6 +16,7 @@ import {
   RotateCw,
   Server,
   Square,
+  Trash2,
   TriangleAlert,
 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/api'
@@ -28,6 +29,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { QueryState } from '@/components/ui/States'
 import { useToast } from '@/components/ui/Toast'
 import { CopyBlock } from '@/components/ui/CopyBlock'
+import { Tooltip } from '@/components/ui/Tooltip'
 import {
   clientsApi,
   clientsKeys,
@@ -65,7 +67,7 @@ export function ClientDetailPage() {
   const [editing, setEditing] = useState(false)
   const [licenseStatus, setLicenseStatus] = useState<LicenseStatus | null>(null)
   const [newKey, setNewKey] = useState<ClientWithKey | null>(null)
-  const [confirm, setConfirm] = useState<'key' | 'archive' | 'stop' | null>(null)
+  const [confirm, setConfirm] = useState<'key' | 'archive' | 'stop' | 'remove' | null>(null)
   const settings = useQuery({ queryKey: settingsKey, queryFn: settingsApi.get })
 
   const invalidate = () => {
@@ -94,10 +96,11 @@ export function ClientDetailPage() {
   })
   const archive = useMutation({
     mutationFn: () => clientsApi.archive(id),
-    onSuccess: () => {
+    onSuccess: (r) => {
       invalidate()
       setConfirm(null)
-      toast.success('Cliente encerrado. A instalação foi bloqueada.')
+      if (r.stopError) toast.error(`Cliente encerrado e bloqueado, mas a instalação não foi parada: ${r.stopError}`)
+      else toast.success(r.stopped ? 'Cliente encerrado: instalação bloqueada e parada.' : 'Cliente encerrado. A instalação foi bloqueada.')
     },
     onError,
   })
@@ -119,11 +122,20 @@ export function ClientDetailPage() {
     },
     onError,
   })
+  const removeInstance = useMutation({
+    mutationFn: () => clientsApi.removeInstance(id),
+    onSuccess: () => {
+      invalidate()
+      setConfirm(null)
+      toast.success('Instalação removida. Banco e arquivos preservados.')
+    },
+    onError,
+  })
   const restore = useMutation({
     mutationFn: () => clientsApi.restore(id),
     onSuccess: () => {
       invalidate()
-      toast.success('Cliente reativado (permanece bloqueado até você liberar)')
+      toast.success('Cliente reativado. A instalação foi iniciada e permanece bloqueada até você liberar.')
     },
     onError,
   })
@@ -265,6 +277,14 @@ export function ClientDetailPage() {
                           </Button>
                         </>
                       )}
+                      {c.provisionStatus === 'REMOVED' && (
+                        <>
+                          <p className="text-xs text-muted">O container foi removido. O banco de dados e os arquivos foram preservados e serão reaproveitados ao recriar.</p>
+                          <Button size="sm" icon={RotateCw} loading={provision.isPending} onClick={() => provision.mutate()}>
+                            Recriar instalação
+                          </Button>
+                        </>
+                      )}
                       {(c.provisionStatus === 'RUNNING' || c.provisionStatus === 'STOPPED') && (
                         <div className="flex flex-wrap gap-2">
                           {c.provisionStatus === 'RUNNING' ? (
@@ -279,6 +299,17 @@ export function ClientDetailPage() {
                           <Button variant="secondary" size="sm" icon={ArrowUpCircle} loading={instance.isPending && instance.variables === 'redeploy'} onClick={() => instance.mutate('redeploy')}>
                             Atualizar versão
                           </Button>
+                          <Tooltip content={c.provisionStatus === 'STOPPED' || c.archivedAt ? 'Remove o container; dados preservados' : 'Pare a instalação ou encerre o cliente antes'}>
+                            <Button
+                              variant="danger-ghost"
+                              size="sm"
+                              icon={Trash2}
+                              disabled={c.provisionStatus !== 'STOPPED' && !c.archivedAt}
+                              onClick={() => setConfirm('remove')}
+                            >
+                              Remover
+                            </Button>
+                          </Tooltip>
                         </div>
                       )}
                     </div>
@@ -314,6 +345,15 @@ export function ClientDetailPage() {
                     <div className="col-span-2">
                       <Info label="E-mail">{c.ownerEmail}</Info>
                     </div>
+                    <div className="col-span-2">
+                      <Info label="Contato de suporte">
+                        {c.supportName || c.supportPhone || c.supportEmail || c.supportUrl ? (
+                          [c.supportName, c.supportPhone && maskPhone(c.supportPhone), c.supportEmail, c.supportUrl].filter(Boolean).join(' · ')
+                        ) : (
+                          <span className="font-normal text-muted">Contato geral do Hub</span>
+                        )}
+                      </Info>
+                    </div>
                     <Info label="Mensalidade">{formatMoney(c.monthlyFee)}</Info>
                     <Info label="Vencimento">{c.dueDay ? `Dia ${c.dueDay}` : null}</Info>
                     {c.notes && (
@@ -342,6 +382,16 @@ export function ClientDetailPage() {
               variant="primary"
             />
             <ConfirmDialog
+              open={confirm === 'remove'}
+              onClose={() => setConfirm(null)}
+              onConfirm={() => removeInstance.mutate()}
+              loading={removeInstance.isPending}
+              title="Remover instalação"
+              description={`O container de ${c.name} será removido. O banco de dados e os arquivos enviados são preservados e a instalação pode ser recriada depois com os mesmos dados.`}
+              confirmLabel="Remover instalação"
+              confirmText={c.slug}
+            />
+            <ConfirmDialog
               open={confirm === 'stop'}
               onClose={() => setConfirm(null)}
               onConfirm={() => instance.mutate('stop')}
@@ -356,7 +406,7 @@ export function ClientDetailPage() {
               onConfirm={() => archive.mutate()}
               loading={archive.isPending}
               title="Encerrar cliente"
-              description={`A instalação de ${c.name} será bloqueada com o motivo "Contrato encerrado". O histórico é mantido e o cliente pode ser reativado.`}
+              description={`A instalação de ${c.name} será bloqueada com o motivo "Contrato encerrado"${c.managed && c.provisionStatus === 'RUNNING' ? ' e parada' : ''}. O histórico é mantido e o cliente pode ser reativado.`}
               confirmLabel="Encerrar cliente"
             />
           </>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { Building2, Plus, Search } from 'lucide-react'
+import { ArrowUpCircle, Building2, Plus, Search } from 'lucide-react'
 import { formatDateTime, formatMoney } from '@/lib/format'
 import { useDebounced } from '@/hooks/useDebounced'
 import { PageHeader } from '@/components/ui/PageHeader'
@@ -15,6 +15,7 @@ import { Pagination } from '@/components/ui/Pagination'
 import { EmptyState } from '@/components/ui/States'
 import { clientsApi, clientsKeys, CONNECTION, LICENSE_STATUS, type Client, type ClientWithKey, type LicenseStatus } from './api'
 import { ClientFormModal, InstanceKeyModal, SetupLinkModal } from './ClientModals'
+import { RedeployAllModal } from './RedeployAllModal'
 
 type Filter = LicenseStatus | 'ALL' | 'ARCHIVED'
 
@@ -24,6 +25,7 @@ export function ClientsPage() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<Filter>('ALL')
   const [formOpen, setFormOpen] = useState(false)
+  const [redeployOpen, setRedeployOpen] = useState(false)
   const [created, setCreated] = useState<Client | ClientWithKey | null>(null)
   const debounced = useDebounced(search)
 
@@ -89,9 +91,14 @@ export function ClientsPage() {
         title="Clientes"
         description="Restaurantes que usam o Restly e a situação de cada licença"
         actions={
-          <Button variant="success" icon={Plus} onClick={() => setFormOpen(true)}>
-            Novo cliente
-          </Button>
+          <>
+            <Button variant="secondary" icon={ArrowUpCircle} onClick={() => setRedeployOpen(true)}>
+              Atualizar instalações
+            </Button>
+            <Button variant="success" icon={Plus} onClick={() => setFormOpen(true)}>
+              Novo cliente
+            </Button>
+          </>
         }
       />
       <Card>
@@ -137,6 +144,7 @@ export function ClientsPage() {
         {clients.data && <Pagination page={page} totalPages={clients.data.meta.totalPages} total={clients.data.meta.total} onChange={setPage} />}
       </Card>
 
+      <RedeployAllModal open={redeployOpen} onClose={() => setRedeployOpen(false)} />
       <ClientFormModal open={formOpen} client={null} onClose={() => setFormOpen(false)} onCreated={setCreated} />
       {/* Instalação automática → link de convite; instalação manual → chave e variáveis. */}
       <SetupLinkModal client={created?.managed ? created : null} onClose={closeCreated} />

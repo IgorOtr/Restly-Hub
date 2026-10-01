@@ -3,7 +3,7 @@ import type { StatusMeta } from '@/components/ui/Badge'
 
 export type LicenseStatus = 'ACTIVE' | 'WARNING' | 'BLOCKED'
 export type Connection = 'ONLINE' | 'OFFLINE' | 'NEVER'
-export type ProvisionStatus = 'NONE' | 'PROVISIONING' | 'RUNNING' | 'STOPPED' | 'FAILED'
+export type ProvisionStatus = 'NONE' | 'PROVISIONING' | 'RUNNING' | 'STOPPED' | 'FAILED' | 'REMOVED'
 
 export const PROVISION_STATUS: Record<ProvisionStatus, StatusMeta> = {
   NONE: { label: 'Instalação manual', tone: 'neutral' },
@@ -11,6 +11,7 @@ export const PROVISION_STATUS: Record<ProvisionStatus, StatusMeta> = {
   RUNNING: { label: 'Em execução', tone: 'success' },
   STOPPED: { label: 'Parada', tone: 'warning' },
   FAILED: { label: 'Falha na criação', tone: 'danger' },
+  REMOVED: { label: 'Removida', tone: 'neutral' },
 }
 
 export const LICENSE_STATUS: Record<LicenseStatus, StatusMeta> = {
@@ -44,6 +45,10 @@ export interface Client {
   ownerPhone: string | null
   ownerEmail: string | null
   notes: string | null
+  supportName: string | null
+  supportPhone: string | null
+  supportEmail: string | null
+  supportUrl: string | null
   monthlyFee: string
   dueDay: number | null
   status: LicenseStatus
@@ -96,6 +101,10 @@ export interface ClientInput {
   ownerPhone?: string
   ownerEmail?: string
   notes?: string
+  supportName?: string | null
+  supportPhone?: string | null
+  supportEmail?: string | null
+  supportUrl?: string | null
   monthlyFee?: number
   dueDay?: number | null
 }
@@ -137,8 +146,24 @@ export const clientsApi = {
   setLicense: (id: string, d: LicenseInput) => api.put<{ client: Client; sync: SyncResult }>(`/clients/${id}/license`, d).then((r) => r.data),
   sync: (id: string) => api.post<SyncResult>(`/clients/${id}/sync`).then((r) => r.data),
   regenerateKey: (id: string) => api.post<ClientWithKey>(`/clients/${id}/regenerate-key`).then((r) => r.data),
-  archive: (id: string) => api.post<{ client: Client; sync: SyncResult }>(`/clients/${id}/archive`).then((r) => r.data),
+  archive: (id: string) =>
+    api
+      .post<{ client: Client; sync: SyncResult; stopped: boolean; stopError?: string }>(`/clients/${id}/archive`, null, { timeout: 300_000 })
+      .then((r) => r.data),
+  removeInstance: (id: string) => api.post<Client>(`/clients/${id}/instance/remove`, null, { timeout: 300_000 }).then((r) => r.data),
+  redeployAll: () => api.post<RedeployJob>('/clients/instances/redeploy-all').then((r) => r.data),
+  redeployAllStatus: () => api.get<RedeployJob | null>('/clients/instances/redeploy-all').then((r) => r.data || null),
   restore: (id: string) => api.post<Client>(`/clients/${id}/restore`).then((r) => r.data),
+}
+
+export interface RedeployJob {
+  id: string
+  image: string | null
+  startedAt: string
+  finishedAt: string | null
+  total: number
+  current: string | null
+  results: { clientId: string; name: string; ok: boolean; error?: string }[]
 }
 
 export interface HubSettings {

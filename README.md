@@ -94,7 +94,9 @@ As instalações ficam em `http://{cliente}.localhost:8080`.
 ## Funcionalidades
 
 - Clientes: cadastro, dados comerciais (mensalidade, vencimento), encerrar/reativar
-- Instalações: criação automática, link de convite, parar/iniciar e atualizar versão
+- Instalações: criação automática, link de convite, parar/iniciar, atualizar versão (individual ou todas de uma vez) e remover preservando os dados (com recriação reaproveitando banco e arquivos)
+- Encerrar cliente bloqueia e para a instalação; reativar volta a iniciá-la (ainda bloqueada)
+- Contato de suporte geral, com opção de um contato específico por cliente
 - Licença: liberar, colocar em aviso (com prazo) e bloquear, com motivo e mensagem; histórico completo
 - Monitoramento: última comunicação, versão e IP de cada instalação; alerta de instalações sem comunicação
 - Configurações: contato de suporte exibido aos clientes e dados de integração (URL e chave pública)

@@ -32,6 +32,10 @@ const Lower = () =>
   Transform(({ value }) =>
     typeof value === 'string' ? value.trim().toLowerCase() : value,
   );
+const NullIfEmpty = () =>
+  Transform(({ value }) =>
+    typeof value === 'string' && value.trim() ? value.trim() : null,
+  );
 const EmptyToUndefined = () =>
   Transform(({ value }) =>
     value === '' || value === null ? undefined : value,
@@ -119,6 +123,38 @@ export class CreateClientDto {
   @Min(0)
   @Max(999999)
   monthlyFee?: number;
+
+  // Contato de suporte específico deste cliente (vazio = contato geral do Hub).
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @NullIfEmpty()
+  @IsString()
+  @MaxLength(120)
+  supportName?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.replace(/\D/g, '') || null : null,
+  )
+  @Matches(/^\d{10,13}$/, { message: 'Telefone de suporte inválido' })
+  supportPhone?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @NullIfEmpty()
+  @IsEmail({}, { message: 'E-mail de suporte inválido' })
+  supportEmail?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  @IsOptional()
+  @NullIfEmpty()
+  @IsUrl(
+    { require_protocol: true, protocols: ['http', 'https'] },
+    { message: 'Link de suporte inválido' },
+  )
+  @MaxLength(500)
+  supportUrl?: string | null;
 
   @ApiPropertyOptional({ description: 'Dia do vencimento (1–31)' })
   @IsOptional()

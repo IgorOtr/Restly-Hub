@@ -25,7 +25,7 @@ export interface AgentInstance {
   setupUrl?: string;
 }
 
-export type InstanceAction = 'start' | 'stop' | 'redeploy' | 'sync';
+export type InstanceAction = 'start' | 'stop' | 'redeploy' | 'sync' | 'remove';
 
 const HEALTH_TTL_MS = 30_000;
 
