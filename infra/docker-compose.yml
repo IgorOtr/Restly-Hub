@@ -1,6 +1,6 @@
 # Infraestrutura compartilhada das instalações do Restly (uma por servidor):
 #   traefik → roteia cada subdomínio          mysql → um banco por cliente
-#   web     → frontend único para todos       agent → cria/gerencia instalações a pedido do Hub
+#   agent   → cria/gerencia as instalações e o frontend único (restly-web) a pedido do Hub
 # Cada cliente ganha apenas o seu container de API (criado pelo agent).
 name: restly-infra
 
@@ -45,19 +45,6 @@ services:
       timeout: 5s
       retries: 20
 
-  # Frontend estático servido para qualquer subdomínio; as rotas /api de cada
-  # cliente têm prioridade maior e vão para a API da instalação.
-  web:
-    image: ${RESTLY_WEB_IMAGE:-restly-web:local}
-    restart: unless-stopped
-    networks: [edge]
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.restly-web.rule=HostRegexp(`^[a-z0-9-]+\.${BASE_DOMAIN_REGEX:-localhost}$$`)
-      - traefik.http.routers.restly-web.priority=1
-      - traefik.http.routers.restly-web.entrypoints=web
-      - traefik.http.services.restly-web.loadbalancer.server.port=80
-
   agent:
     build:
       context: ..
@@ -73,6 +60,7 @@ services:
       PUBLIC_PORT: ${PUBLIC_PORT:-}
       TLS_ENABLED: ${TLS_ENABLED:-false}
       RESTLY_BACKEND_IMAGE: ${RESTLY_BACKEND_IMAGE:-restly-backend:local}
+      RESTLY_WEB_IMAGE: ${RESTLY_WEB_IMAGE:-restly-web:local}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       INSTANCE_NODE_ENV: ${INSTANCE_NODE_ENV:-production}
       INSTANCE_MEM_LIMIT: ${INSTANCE_MEM_LIMIT:-384m}

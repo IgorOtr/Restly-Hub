@@ -93,7 +93,7 @@ export function ClientsPage() {
         actions={
           <>
             <Button variant="secondary" icon={ArrowUpCircle} onClick={() => setRedeployOpen(true)}>
-              Atualizar instalações
+              Atualizar plataforma
             </Button>
             <Button variant="success" icon={Plus} onClick={() => setFormOpen(true)}>
               Novo cliente
@@ -105,7 +105,12 @@ export function ClientsPage() {
         <div className="flex flex-wrap items-center gap-2 border-b border-border p-4">
           <div className="relative min-w-56 flex-1">
             <Search size={15} className="absolute top-1/2 left-3 -translate-y-1/2 text-muted" />
-            <Input placeholder="Buscar por nome, identificador ou responsável" value={search} onChange={(e) => (setSearch(e.target.value), setPage(1))} className="pl-9" />
+            <Input
+              placeholder="Buscar por nome, identificador ou responsável"
+              value={search}
+              onChange={(e) => (setSearch(e.target.value), setPage(1))}
+              className="pl-9"
+            />
           </div>
           <SegmentedControl
             size="sm"

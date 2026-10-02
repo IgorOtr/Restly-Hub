@@ -7,13 +7,28 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { createHmac } from 'node:crypto';
 
+export interface ImageVersion {
+  image: string;
+  id: string;
+  created: string;
+  /** Versão gravada na imagem no build (label), quando houver. */
+  version: string | null;
+}
+
+export interface PlatformVersions {
+  backend: ImageVersion | null;
+  web: ImageVersion | null;
+}
+
 export interface AgentHealth {
   ok: boolean;
   domain: string;
   scheme: string;
   publicPort: string;
   backendImage: string;
+  webImage?: string;
   tls: boolean;
+  versions?: PlatformVersions;
 }
 
 export interface AgentInstance {
@@ -23,6 +38,8 @@ export interface AgentInstance {
   startedAt?: string | null;
   url?: string;
   setupUrl?: string;
+  /** A instalação já roda a imagem atual do servidor. */
+  upToDate?: boolean;
 }
 
 export type InstanceAction = 'start' | 'stop' | 'redeploy' | 'sync' | 'remove';
@@ -89,6 +106,28 @@ export class ProvisioningService {
       `/instances/${slug}/${action}`,
       undefined,
       action === 'sync' ? 15_000 : 240_000,
+    );
+  }
+
+  /** Baixa as imagens novas do registro (imagens locais são mantidas). */
+  pullImages() {
+    this.cached = undefined;
+    return this.call<{ versions: PlatformVersions }>(
+      'POST',
+      '/platform/pull',
+      undefined,
+      660_000,
+    );
+  }
+
+  /** Recria o frontend compartilhado com a imagem atual. */
+  deployWeb() {
+    this.cached = undefined;
+    return this.call<{ versions: PlatformVersions }>(
+      'POST',
+      '/platform/web',
+      undefined,
+      240_000,
     );
   }
 

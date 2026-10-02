@@ -176,7 +176,13 @@ export function ClientFormModal({
         <Field label="Nome do restaurante" required error={errors.name?.message} className="sm:col-span-6">
           <Input autoFocus invalid={!!errors.name} {...form.register('name')} />
         </Field>
-        <Field label="Identificador (subdomínio)" required error={errors.slug?.message} hint="Identifica a instalação no Hub" className="sm:col-span-2">
+        <Field
+          label="Identificador (subdomínio)"
+          required
+          error={errors.slug?.message}
+          hint="Identifica a instalação no Hub"
+          className="sm:col-span-2"
+        >
           <Input invalid={!!errors.slug} {...form.register('slug')} />
         </Field>
         {automatic && provisioning ? (
@@ -195,7 +201,9 @@ export function ClientFormModal({
           <Controller
             control={form.control}
             name="ownerPhone"
-            render={({ field }) => <Input {...field} inputMode="tel" invalid={!!errors.ownerPhone} onChange={(e) => field.onChange(maskPhone(e.target.value))} />}
+            render={({ field }) => (
+              <Input {...field} inputMode="tel" invalid={!!errors.ownerPhone} onChange={(e) => field.onChange(maskPhone(e.target.value))} />
+            )}
           />
         </Field>
         <Field label="E-mail" error={errors.ownerEmail?.message} className="sm:col-span-2">
@@ -205,7 +213,9 @@ export function ClientFormModal({
           <Controller
             control={form.control}
             name="monthlyFee"
-            render={({ field }) => <MoneyInput value={field.value ?? ''} onChange={field.onChange} invalid={!!errors.monthlyFee} placeholder="0,00" />}
+            render={({ field }) => (
+              <MoneyInput value={field.value ?? ''} onChange={field.onChange} invalid={!!errors.monthlyFee} placeholder="0,00" />
+            )}
           />
         </Field>
         <Field label="Dia do vencimento" error={errors.dueDay?.message} className="sm:col-span-3">
@@ -229,7 +239,9 @@ export function ClientFormModal({
               <Controller
                 control={form.control}
                 name="supportPhone"
-                render={({ field }) => <Input {...field} inputMode="tel" invalid={!!errors.supportPhone} onChange={(e) => field.onChange(maskPhone(e.target.value))} />}
+                render={({ field }) => (
+                  <Input {...field} inputMode="tel" invalid={!!errors.supportPhone} onChange={(e) => field.onChange(maskPhone(e.target.value))} />
+                )}
               />
             </Field>
             <Field label="E-mail" error={errors.supportEmail?.message}>
@@ -266,9 +278,14 @@ export function InstanceKeyModal({ client, onClose }: { client: ClientWithKey | 
           <AlertTriangle size={16} className="mt-0.5 shrink-0" />
           Esta chave é exibida apenas agora. Copie as variáveis abaixo para o arquivo .env da instalação do cliente. Se perder, gere uma nova chave.
         </p>
-        {settings.data ? <CopyBlock value={installEnv(client, settings.data, client.instanceKey)} label="Copiar variáveis" /> : <p className="text-sm text-muted">Carregando...</p>}
+        {settings.data ? (
+          <CopyBlock value={installEnv(client, settings.data, client.instanceKey)} label="Copiar variáveis" />
+        ) : (
+          <p className="text-sm text-muted">Carregando...</p>
+        )}
         <p className="text-xs text-muted">
-          Depois de salvar o .env, reinicie a instalação. Ela aparecerá como <strong className="text-fg">Online</strong> aqui no Hub após a primeira consulta.
+          Depois de salvar o .env, reinicie a instalação. Ela aparecerá como <strong className="text-fg">Online</strong> aqui no Hub após a primeira
+          consulta.
         </p>
       </div>
     </Modal>
@@ -294,7 +311,9 @@ export function SetupLinkModal({ client, onClose }: { client: Client | null; onC
     >
       {failed ? (
         <div className="space-y-3 text-sm">
-          <p className="text-muted">O cliente foi cadastrado, mas o servidor não conseguiu subir a instalação. Você pode tentar novamente na página do cliente.</p>
+          <p className="text-muted">
+            O cliente foi cadastrado, mas o servidor não conseguiu subir a instalação. Você pode tentar novamente na página do cliente.
+          </p>
           <pre className="max-h-48 overflow-auto rounded-lg bg-surface-2 p-3 text-xs whitespace-pre-wrap">{client.provisionError}</pre>
         </div>
       ) : (
@@ -363,7 +382,11 @@ export function LicenseModal({ client, initialStatus, onClose }: { client: Clien
           <Button variant="secondary" onClick={onClose}>
             Cancelar
           </Button>
-          <Button variant={status === 'BLOCKED' ? 'danger' : status === 'ACTIVE' ? 'success' : 'primary'} loading={save.isPending} onClick={() => save.mutate()}>
+          <Button
+            variant={status === 'BLOCKED' ? 'danger' : status === 'ACTIVE' ? 'success' : 'primary'}
+            loading={save.isPending}
+            onClick={() => save.mutate()}
+          >
             {status === 'BLOCKED' ? 'Bloquear' : status === 'ACTIVE' ? 'Liberar acesso' : 'Aplicar aviso'}
           </Button>
         </>

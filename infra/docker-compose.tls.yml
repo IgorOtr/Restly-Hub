@@ -23,14 +23,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - letsencrypt:/letsencrypt
 
-  web:
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.restly-web.rule=HostRegexp(`^[a-z0-9-]+\.${BASE_DOMAIN_REGEX}$$`)
-      - traefik.http.routers.restly-web.priority=1
-      - traefik.http.routers.restly-web.entrypoints=websecure
-      - traefik.http.routers.restly-web.tls.certresolver=le
-      - traefik.http.services.restly-web.loadbalancer.server.port=80
 
 volumes:
   letsencrypt:

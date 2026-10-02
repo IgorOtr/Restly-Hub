@@ -156,14 +156,29 @@ export const clientsApi = {
   restore: (id: string) => api.post<Client>(`/clients/${id}/restore`).then((r) => r.data),
 }
 
+export interface ImageVersion {
+  image: string
+  id: string
+  created: string
+  version: string | null
+}
+
+export interface PlatformVersions {
+  backend: ImageVersion | null
+  web: ImageVersion | null
+}
+
 export interface RedeployJob {
   id: string
-  image: string | null
+  phase: 'pull' | 'instances' | 'web' | 'done'
+  versions: PlatformVersions | null
   startedAt: string
   finishedAt: string | null
   total: number
   current: string | null
-  results: { clientId: string; name: string; ok: boolean; error?: string }[]
+  results: { clientId: string; name: string; ok: boolean; skipped?: boolean; error?: string }[]
+  platformError: string | null
+  webUpdated: boolean
 }
 
 export interface HubSettings {
@@ -171,7 +186,15 @@ export interface HubSettings {
   hubPublicKey: string
   hubPublicUrl: string | null
   /** Servidor de instalações disponível para criação automática (null = indisponível). */
-  provisioning: { domain: string; scheme: string; publicPort: string; backendImage: string; tls: boolean } | null
+  provisioning: {
+    domain: string
+    scheme: string
+    publicPort: string
+    backendImage: string
+    webImage?: string
+    tls: boolean
+    versions?: PlatformVersions
+  } | null
 }
 
 export const managedUrl = (p: NonNullable<HubSettings['provisioning']>, slug: string) =>

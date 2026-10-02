@@ -279,7 +279,9 @@ export function ClientDetailPage() {
                       )}
                       {c.provisionStatus === 'REMOVED' && (
                         <>
-                          <p className="text-xs text-muted">O container foi removido. O banco de dados e os arquivos foram preservados e serão reaproveitados ao recriar.</p>
+                          <p className="text-xs text-muted">
+                            O container foi removido. O banco de dados e os arquivos foram preservados e serão reaproveitados ao recriar.
+                          </p>
                           <Button size="sm" icon={RotateCw} loading={provision.isPending} onClick={() => provision.mutate()}>
                             Recriar instalação
                           </Button>
@@ -288,18 +290,42 @@ export function ClientDetailPage() {
                       {(c.provisionStatus === 'RUNNING' || c.provisionStatus === 'STOPPED') && (
                         <div className="flex flex-wrap gap-2">
                           {c.provisionStatus === 'RUNNING' ? (
-                            <Button variant="secondary" size="sm" icon={Square} loading={instance.isPending && instance.variables === 'stop'} onClick={() => setConfirm('stop')}>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              icon={Square}
+                              loading={instance.isPending && instance.variables === 'stop'}
+                              onClick={() => setConfirm('stop')}
+                            >
                               Parar
                             </Button>
                           ) : (
-                            <Button variant="success" size="sm" icon={Play} loading={instance.isPending && instance.variables === 'start'} onClick={() => instance.mutate('start')}>
+                            <Button
+                              variant="success"
+                              size="sm"
+                              icon={Play}
+                              loading={instance.isPending && instance.variables === 'start'}
+                              onClick={() => instance.mutate('start')}
+                            >
                               Iniciar
                             </Button>
                           )}
-                          <Button variant="secondary" size="sm" icon={ArrowUpCircle} loading={instance.isPending && instance.variables === 'redeploy'} onClick={() => instance.mutate('redeploy')}>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            icon={ArrowUpCircle}
+                            loading={instance.isPending && instance.variables === 'redeploy'}
+                            onClick={() => instance.mutate('redeploy')}
+                          >
                             Atualizar versão
                           </Button>
-                          <Tooltip content={c.provisionStatus === 'STOPPED' || c.archivedAt ? 'Remove o container; dados preservados' : 'Pare a instalação ou encerre o cliente antes'}>
+                          <Tooltip
+                            content={
+                              c.provisionStatus === 'STOPPED' || c.archivedAt
+                                ? 'Remove o container; dados preservados'
+                                : 'Pare a instalação ou encerre o cliente antes'
+                            }
+                          >
                             <Button
                               variant="danger-ghost"
                               size="sm"

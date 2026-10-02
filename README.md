@@ -69,9 +69,8 @@ consegue se cadastrar na instalação recém-criada.
 ### Subindo a infraestrutura (desenvolvimento local)
 
 ```bash
-# 1. Imagens do Restly (no repositório do Restly)
-docker build -f docker/backend.prod.Dockerfile -t restly-backend:local .
-docker build -f docker/frontend.static.Dockerfile -t restly-web:local .
+# 1. Imagens do Restly (no repositório do Restly; a versão vem do git)
+docker/build-images.sh
 
 # 2. Infra (neste repositório)
 cd infra && cp .env.example .env    # defina AGENT_TOKEN e MYSQL_ROOT_PASSWORD
@@ -81,6 +80,14 @@ docker compose up -d --build
 ```
 
 As instalações ficam em `http://{cliente}.localhost:8080`.
+
+### Atualizar a versão dos clientes
+
+1. Gere as imagens novas: `docker/build-images.sh` no repositório do Restly
+   (em produção: `REGISTRY=ghcr.io/seu-usuario docker/build-images.sh`, que também publica).
+2. No Hub: **Clientes → Atualizar plataforma**. Em um clique o agente baixa a versão publicada, atualiza a
+   API de cada cliente em execução (pulando quem já está na versão atual; as migrações rodam ao iniciar) e,
+   por último, o frontend compartilhado — que agora é gerenciado pelo agente (`restly-web`), não mais pela infra.
 
 ### Produção
 

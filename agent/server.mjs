@@ -15,6 +15,7 @@ const cfg = {
   publicPort: env('PUBLIC_PORT', ''),
   tls: env('TLS_ENABLED', 'false') === 'true',
   backendImage: env('RESTLY_BACKEND_IMAGE', 'restly-backend:local'),
+  webImage: env('RESTLY_WEB_IMAGE', 'restly-web:local'),
   mysqlContainer: env('MYSQL_CONTAINER', 'restly-infra-mysql'),
   mysqlHost: env('MYSQL_HOST', 'restly-mysql'),
   mysqlRootPassword: env('MYSQL_ROOT_PASSWORD', ''),
@@ -111,12 +112,96 @@ async function exists(slug) {
   )
 }
 
+/** Identificador, data e versão (label) de uma imagem local; null se não existir. */
+async function imageInfo(image) {
+  const raw = await run('docker', ['image', 'inspect', '--format', '{{.Id}}|{{.Created}}|{{index .Config.Labels "org.opencontainers.image.version"}}', image]).catch(() => '')
+  if (!raw.trim()) return null
+  const [id, created, version] = raw.trim().split('|')
+  return { image, id, created, version: version && version !== '<no value>' ? version : null }
+}
+
 async function status(slug) {
   const n = names(slug)
   if (!(await exists(slug))) return { provisioned: false }
-  const raw = await run('docker', ['inspect', '--format', '{{.State.Status}}|{{.Config.Image}}|{{.State.StartedAt}}', n.container]).catch(() => '')
-  const [state, image, startedAt] = raw.trim().split('|')
-  return { provisioned: true, state: state || 'missing', image: image || null, startedAt: startedAt || null, url: n.url }
+  const raw = await run('docker', ['inspect', '--format', '{{.State.Status}}|{{.Config.Image}}|{{.State.StartedAt}}|{{.Image}}', n.container]).catch(() => '')
+  const [state, image, startedAt, imageId] = raw.trim().split('|')
+  const current = await imageInfo(cfg.backendImage)
+  return {
+    provisioned: true,
+    state: state || 'missing',
+    image: image || null,
+    startedAt: startedAt || null,
+    url: n.url,
+    // A instalação roda a mesma imagem que o servidor tem hoje?
+    upToDate: Boolean(imageId && current && imageId === current.id),
+  }
+}
+
+// ─────────────── Frontend compartilhado (um para todas as instalações) ───────────────
+
+const WEB = { project: 'restly-web', container: 'restly-web', dir: path.join(cfg.dataDir, 'web') }
+const LEGACY_WEB_CONTAINER = 'restly-infra-web-1'
+
+function webComposeFile() {
+  const regex = cfg.domain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const labels = [
+    'traefik.enable=true',
+    `traefik.docker.network=${cfg.network}`,
+    // Qualquer subdomínio; as rotas /api de cada cliente têm prioridade maior.
+    `traefik.http.routers.restly-web.rule=HostRegexp(\`^[a-z0-9-]+\\.${regex}$$\`)`, // $$: escape do compose
+    'traefik.http.routers.restly-web.priority=1',
+    `traefik.http.routers.restly-web.entrypoints=${cfg.tls ? 'websecure' : 'web'}`,
+    ...(cfg.tls ? ['traefik.http.routers.restly-web.tls.certresolver=le'] : []),
+    'traefik.http.services.restly-web.loadbalancer.server.port=80',
+  ]
+  return `services:
+  web:
+    image: ${cfg.webImage}
+    container_name: ${WEB.container}
+    restart: unless-stopped
+    networks: [edge]
+    labels:
+${labels.map((l) => `      - ${JSON.stringify(l)}`).join('\n')}
+networks:
+  edge:
+    external: true
+    name: ${cfg.network}
+`
+}
+
+const webCompose = (...args) =>
+  run('docker', ['compose', '-p', WEB.project, '-f', path.join(WEB.dir, 'compose.yml'), ...args], { cwd: WEB.dir })
+
+/** Sobe (ou recria, se a imagem mudou) o frontend compartilhado. */
+async function deployWeb() {
+  await fs.mkdir(WEB.dir, { recursive: true, mode: 0o700 })
+  await fs.writeFile(path.join(WEB.dir, 'compose.yml'), webComposeFile(), { mode: 0o600 })
+  // Versões antigas da infra subiam o frontend pelo compose da infra: substitui.
+  await run('docker', ['rm', '-f', LEGACY_WEB_CONTAINER]).catch(() => undefined)
+  await webCompose('up', '-d', '--remove-orphans')
+  const raw = await run('docker', ['inspect', '--format', '{{.State.Status}}|{{.Image}}', WEB.container]).catch(() => '')
+  const [state, imageId] = raw.trim().split('|')
+  if (state !== 'running') throw new Error('O frontend não iniciou')
+  return { state, imageId }
+}
+
+/** Baixa as imagens do registro (imagens locais, sem registro, são ignoradas). */
+async function pullImages() {
+  const results = {}
+  for (const [key, image] of [['backend', cfg.backendImage], ['web', cfg.webImage]]) {
+    try {
+      await run('docker', ['pull', image], { timeout: 600_000 })
+      results[key] = 'pulled'
+    } catch {
+      results[key] = 'local'
+    }
+  }
+  return results
+}
+
+async function versions() {
+  const [backend, web] = await Promise.all([imageInfo(cfg.backendImage), imageInfo(cfg.webImage)])
+  return { backend, web }
 }
 
 async function waitHealthy(slug, seconds = 120) {
@@ -268,7 +353,25 @@ async function route(req, raw) {
   const body = raw ? JSON.parse(raw) : {}
 
   if (req.method === 'GET' && url.pathname === '/health')
-    return { ok: true, domain: cfg.domain, scheme: cfg.scheme, publicPort: cfg.publicPort, backendImage: cfg.backendImage, tls: cfg.tls }
+    return {
+      ok: true,
+      domain: cfg.domain,
+      scheme: cfg.scheme,
+      publicPort: cfg.publicPort,
+      backendImage: cfg.backendImage,
+      webImage: cfg.webImage,
+      tls: cfg.tls,
+      versions: await versions(),
+    }
+
+  // Atualização da plataforma: baixar imagens e recriar o frontend compartilhado.
+  if (req.method === 'POST' && url.pathname === '/platform/pull')
+    return withLock('__platform', async () => ({ pulled: await pullImages(), versions: await versions() }))
+  if (req.method === 'POST' && url.pathname === '/platform/web')
+    return withLock('__platform', async () => {
+      log('deploy web', cfg.webImage)
+      return { web: await deployWeb(), versions: await versions() }
+    })
 
   if (parts[0] !== 'instances') throw new HttpError(404, 'Rota não encontrada')
   const slug = parts[1] ?? body.slug
@@ -286,6 +389,9 @@ async function route(req, raw) {
   }
   throw new HttpError(404, 'Rota não encontrada')
 }
+
+// Garante o frontend no ar ao iniciar o agente (também migra o da infra antiga).
+deployWeb().catch((e) => log('frontend: falha ao iniciar', e.message))
 
 http
   .createServer(async (req, res) => {
