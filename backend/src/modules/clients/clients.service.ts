@@ -210,12 +210,47 @@ export class ClientsService {
     const client = await this.findOrThrow(id);
     this.assertControllable(client);
     await this.provisioning.action(client.slug, action);
-    return present(
+    const updated = present(
       await this.prisma.client.update({
         where: { id },
         data: { provisionStatus: action === 'stop' ? 'STOPPED' : 'RUNNING' },
       }),
     );
+    if (action !== 'redeploy') return updated;
+    return { ...updated, ...(await this.syncSharedWeb(id)) };
+  }
+
+  /**
+   * A tela (frontend) é compartilhada por todas as instalações. Depois de
+   * atualizar uma API, a tela também é atualizada se nenhuma outra instalação
+   * em execução ficou na versão anterior (a tela nova pode depender de rotas novas).
+   */
+  private async syncSharedWeb(updatedClientId: string) {
+    const others = await this.prisma.client.findMany({
+      where: {
+        managed: true,
+        provisionStatus: 'RUNNING',
+        archivedAt: null,
+        id: { not: updatedClientId },
+      },
+      select: { slug: true },
+    });
+    const outdated: string[] = [];
+    for (const o of others) {
+      const st = await this.provisioning.status(o.slug).catch(() => null);
+      if (st && st.state === 'running' && !st.upToDate) outdated.push(o.slug);
+    }
+    if (outdated.length)
+      return { webUpdated: false, outdatedInstances: outdated.length };
+    try {
+      await this.provisioning.deployWeb();
+      return { webUpdated: true, outdatedInstances: 0 };
+    } catch (e) {
+      this.logger.warn(
+        `Falha ao atualizar a tela compartilhada: ${e instanceof Error ? e.message : e}`,
+      );
+      return { webUpdated: false, outdatedInstances: 0 };
+    }
   }
 
   /**

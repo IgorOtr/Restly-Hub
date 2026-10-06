@@ -115,10 +115,16 @@ export function ClientDetailPage() {
   })
   const instance = useMutation({
     mutationFn: (action: InstanceAction) => clientsApi.instanceAction(id, action),
-    onSuccess: (_r, action) => {
+    onSuccess: (r, action) => {
       invalidate()
       setConfirm(null)
-      toast.success(action === 'stop' ? 'Instalação parada' : action === 'start' ? 'Instalação iniciada' : 'Instalação atualizada')
+      if (action !== 'redeploy') return toast.success(action === 'stop' ? 'Instalação parada' : 'Instalação iniciada')
+      if (r.webUpdated) toast.success('Instalação atualizada (API e tela)')
+      else if (r.outdatedInstances)
+        toast.success(
+          `API atualizada. A tela é compartilhada e só muda quando os outros ${r.outdatedInstances} cliente(s) também forem atualizados — use "Atualizar plataforma".`,
+        )
+      else toast.success('Instalação atualizada')
     },
     onError,
   })

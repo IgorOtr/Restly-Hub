@@ -141,7 +141,9 @@ export const clientsApi = {
   create: (d: ClientInput) => api.post<ClientWithKey | Client>('/clients', d, { timeout: 300_000 }).then((r) => r.data),
   provision: (id: string) => api.post<Client>(`/clients/${id}/provision`, null, { timeout: 300_000 }).then((r) => r.data),
   instanceAction: (id: string, action: InstanceAction) =>
-    api.post<Client>(`/clients/${id}/instance/${action}`, null, { timeout: 300_000 }).then((r) => r.data),
+    api
+      .post<Client & { webUpdated?: boolean; outdatedInstances?: number }>(`/clients/${id}/instance/${action}`, null, { timeout: 300_000 })
+      .then((r) => r.data),
   update: (id: string, d: Partial<ClientInput>) => api.patch<Client>(`/clients/${id}`, d).then((r) => r.data),
   setLicense: (id: string, d: LicenseInput) => api.put<{ client: Client; sync: SyncResult }>(`/clients/${id}/license`, d).then((r) => r.data),
   sync: (id: string) => api.post<SyncResult>(`/clients/${id}/sync`).then((r) => r.data),
