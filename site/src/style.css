@@ -2,22 +2,23 @@
 @import '@fontsource-variable/inter';
 @import 'tailwindcss';
 
-/* Gastronomia (brasa, açafrão, papel de cardápio) + tecnologia (azul/violeta do Restly). */
+/* Paleta da logo: azul e violeta do ícone + marinho do "Restly". */
 @theme {
   --font-serif: 'Fraunces Variable', ui-serif, Georgia, serif;
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
 
-  --color-ink: #0f0e14;
-  --color-ink-2: #17151f;
-  --color-ink-3: #221f2c;
-  --color-cream: #fbf6ee;
-  --color-cream-2: #f3ebdd;
-  --color-ember: #ff6a3d;
-  --color-ember-dark: #e04e22;
-  --color-saffron: #ffb547;
+  --color-ink: #0c0c26;
+  --color-ink-2: #14143a;
+  --color-ink-3: #1d1d4d;
+  --color-canvas: #f7f7fd;
+  --color-canvas-2: #eeeefb;
   --color-brand: #3d3bff;
   --color-brand-2: #7a2ff7;
-  --color-basil: #2fa36b;
+  /* Destaques: CTA no azul da logo; tom suave para textos sobre fundo escuro. */
+  --color-accent: #3d3bff;
+  --color-accent-dark: #2b29e0;
+  --color-accent-soft: #a9a8ff;
+  --color-basil: #25a55f;
 }
 
 @layer base {
@@ -26,10 +27,10 @@
     scroll-padding-top: 5rem;
   }
   body {
-    @apply bg-cream font-sans text-ink antialiased;
+    @apply bg-canvas font-sans text-ink antialiased;
   }
   ::selection {
-    @apply bg-ember text-white;
+    @apply bg-accent text-white;
   }
 }
 
@@ -48,7 +49,7 @@
   @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:text-base;
 }
 @utility btn-primary {
-  @apply btn bg-ember text-white shadow-lg shadow-ember/30 hover:-translate-y-0.5 hover:bg-ember-dark hover:shadow-xl hover:shadow-ember/40 focus-visible:ring-ember;
+  @apply btn bg-accent text-white shadow-lg shadow-accent/30 hover:-translate-y-0.5 hover:bg-accent-dark hover:shadow-xl hover:shadow-accent/40 focus-visible:ring-accent;
 }
 @utility btn-ghost-dark {
   @apply btn border border-white/15 bg-white/5 text-white backdrop-blur hover:bg-white/10;
@@ -60,13 +61,13 @@
   @apply rounded-2xl border border-white/10 bg-white/[0.06] backdrop-blur-xl;
 }
 @utility field {
-  @apply w-full rounded-xl border border-ink/10 bg-white px-4 py-3 text-base text-ink placeholder:text-ink/40 transition focus:border-ember focus:ring-4 focus:ring-ember/15 focus:outline-none;
+  @apply w-full rounded-xl border border-ink/10 bg-white px-4 py-3 text-base text-ink placeholder:text-ink/40 transition focus:border-accent focus:ring-4 focus:ring-accent/15 focus:outline-none;
 }
 @utility label {
   @apply mb-1.5 block text-sm font-medium text-ink/80;
 }
 
-/* Textura de grão sutil (papel/cardápio) sobre fundos escuros. */
+/* Textura de grão sutil sobre fundos escuros. */
 .grain::after {
   content: '';
   position: absolute;
@@ -76,16 +77,16 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Brilho de brasa (gastronomia) encontrando o azul do produto (tecnologia). */
+/* Brilho azul e violeta da logo sobre o marinho. */
 .glow-hero {
   background:
-    radial-gradient(60% 50% at 15% 10%, rgb(255 106 61 / 0.28), transparent 60%),
-    radial-gradient(50% 50% at 90% 20%, rgb(61 59 255 / 0.35), transparent 60%),
-    radial-gradient(40% 40% at 70% 90%, rgb(122 47 247 / 0.25), transparent 60%), var(--color-ink);
+    radial-gradient(60% 50% at 10% 5%, rgb(61 59 255 / 0.45), transparent 60%),
+    radial-gradient(50% 50% at 95% 25%, rgb(122 47 247 / 0.4), transparent 60%),
+    radial-gradient(45% 45% at 60% 100%, rgb(61 59 255 / 0.25), transparent 60%), var(--color-ink);
 }
 
 .text-gradient {
-  background: linear-gradient(90deg, var(--color-saffron), var(--color-ember) 45%, #ff7aa8);
+  background: linear-gradient(90deg, #8f8eff, #b18cff 50%, #d6b8ff);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

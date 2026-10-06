@@ -51,7 +51,7 @@ const logoLight = header.querySelector<HTMLElement>('[data-logo-light]')!
 const nav = header.querySelector<HTMLElement>('[data-nav]')!
 const onScroll = () => {
   const solid = window.scrollY > 40
-  header.classList.toggle('bg-cream/90', solid)
+  header.classList.toggle('bg-canvas/90', solid)
   header.classList.toggle('backdrop-blur-lg', solid)
   header.classList.toggle('shadow-sm', solid)
   logoDark.classList.toggle('hidden', solid)
@@ -93,7 +93,7 @@ void fetch('/api/public/site/config')
       })
     }
     const footer = document.querySelector('[data-footer-contact]')
-    if (footer && c?.email) footer.innerHTML = `<a class="hover:text-ember" href="mailto:${c.email}">${c.email}</a>`
+    if (footer && c?.email) footer.innerHTML = `<a class="hover:text-accent" href="mailto:${c.email}">${c.email}</a>`
   })
   .catch(() => undefined)
 
