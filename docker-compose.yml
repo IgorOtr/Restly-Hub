@@ -68,5 +68,23 @@ services:
       - ./frontend:/app
       - /app/node_modules
 
+  # Site de vendas (opcional em dev): docker compose --profile site up -d site
+  site:
+    profiles: [site]
+    build:
+      context: .
+      dockerfile: docker/site.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_OPTIONS: --max-old-space-size=128
+      API_PROXY_TARGET: http://backend:3100
+    ports:
+      - '${SITE_PORT:-5175}:5175'
+    volumes:
+      - ./site:/app
+      - /app/node_modules
+
 volumes:
   restly_hub_mysql_data:

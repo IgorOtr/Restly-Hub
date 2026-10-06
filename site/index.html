@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Restly — Sistema de gestão para restaurantes | Cardápio QR Code, comandas, cozinha e caixa</title>
+    <meta
+      name="description"
+      content="Pare de perder dinheiro com pedido errado, caixa que não fecha e estoque no achômetro. O Restly reúne cardápio digital no QR Code, comanda do garçom, cozinha em tempo real, caixa, estoque e relatórios. Peça um orçamento."
+    />
+    <meta name="theme-color" content="#0f0e14" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/brand/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/brand/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content="Restly — Seu restaurante no controle, do pedido ao lucro" />
+    <meta property="og:description" content="Cardápio no QR Code, comanda do garçom, cozinha em tempo real, caixa, estoque e relatórios em um só sistema." />
+    <meta property="og:image" content="/brand/icon-512.png" />
+  </head>
+  <body>
+    <!-- ───────────── Topo ───────────── -->
+    <header id="topo" class="fixed inset-x-0 top-0 z-50 transition-all duration-300">
+      <div class="container-x flex h-16 items-center justify-between gap-4">
+        <a href="#inicio" class="flex items-center" aria-label="Restly — início">
+          <img src="/brand/logo-dark.png" alt="Restly" class="h-8 w-auto" data-logo-dark />
+          <img src="/brand/logo.png" alt="Restly" class="hidden h-8 w-auto" data-logo-light />
+        </a>
+        <nav class="hidden items-center gap-8 text-sm font-medium md:flex" data-nav>
+          <a href="#dores" class="opacity-80 transition hover:opacity-100">Problemas</a>
+          <a href="#solucao" class="opacity-80 transition hover:opacity-100">Funcionalidades</a>
+          <a href="#como-funciona" class="opacity-80 transition hover:opacity-100">Como funciona</a>
+          <a href="#duvidas" class="opacity-80 transition hover:opacity-100">Dúvidas</a>
+        </nav>
+        <a href="#orcamento" class="btn-primary !px-5 !py-2.5 !text-sm">Pedir orçamento</a>
+      </div>
+    </header>
+
+    <main>
+      <!-- ───────────── Hero ───────────── -->
+      <section id="inicio" class="glow-hero grain relative overflow-hidden pt-28 pb-20 text-white sm:pt-36 sm:pb-28">
+        <div class="container-x relative z-10 grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
+          <div>
+            <span class="eyebrow reveal border-ember/40 bg-ember/10 text-saffron">
+              <svg data-icon="flame" class="h-3.5 w-3.5"></svg> Gestão completa para restaurantes
+            </span>
+            <h1 class="h-display reveal mt-6 text-4xl leading-[1.05] sm:text-6xl lg:text-[4.2rem]">
+              Salão cheio não é <em class="text-gradient not-italic sm:italic">sinônimo de lucro.</em>
+            </h1>
+            <p class="reveal mt-6 max-w-xl text-lg leading-relaxed text-white/75 sm:text-xl">
+              Pedido anotado errado, conta que demora, caixa que não fecha e estoque no “achômetro”. Cada detalhe desses
+              <strong class="font-semibold text-white">tira dinheiro do seu bolso todas as noites</strong>. O Restly coloca o seu restaurante no
+              controle — do QR Code na mesa ao fechamento do caixa.
+            </p>
+            <div class="reveal mt-9 flex flex-col gap-3 sm:flex-row">
+              <a href="#orcamento" class="btn-primary group">
+                Quero um orçamento gratuito
+                <svg data-icon="arrow-right" class="h-4 w-4 transition group-hover:translate-x-0.5"></svg>
+              </a>
+              <a href="#" class="btn-ghost-dark hidden" data-whatsapp target="_blank" rel="noopener">
+                <svg data-icon="message-circle" class="h-4 w-4"></svg> Falar no WhatsApp
+              </a>
+            </div>
+            <ul class="reveal mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/60">
+              <li class="flex items-center gap-1.5"><svg data-icon="check" class="h-4 w-4 text-saffron"></svg> Sem compromisso</li>
+              <li class="flex items-center gap-1.5"><svg data-icon="check" class="h-4 w-4 text-saffron"></svg> Seu cliente não baixa app</li>
+              <li class="flex items-center gap-1.5"><svg data-icon="check" class="h-4 w-4 text-saffron"></svg> Funciona no celular, tablet e computador</li>
+            </ul>
+          </div>
+
+          <!-- Ilustração: prato + telas do sistema -->
+          <div class="reveal relative mx-auto w-full max-w-md lg:max-w-none" aria-hidden="true">
+            <div class="absolute -inset-8 rounded-full bg-ember/20 blur-3xl"></div>
+            <div class="relative">
+              <!-- Celular com o cardápio do QR Code -->
+              <div class="float relative mx-auto w-64 rounded-[2.2rem] border border-white/15 bg-ink-2 p-2.5 shadow-2xl shadow-black/60 sm:w-72">
+                <div class="overflow-hidden rounded-[1.7rem] bg-cream text-ink">
+                  <div class="flex items-center justify-between bg-white px-4 pt-4 pb-3">
+                    <div>
+                      <p class="text-[10px] font-semibold tracking-wider text-ink/50 uppercase">Mesa 07 · Varanda</p>
+                      <p class="font-serif text-lg font-semibold">Olá, Marina!</p>
+                    </div>
+                    <span class="rounded-full bg-ember/10 px-2 py-1 text-[10px] font-semibold text-ember">Comanda 0142</span>
+                  </div>
+                  <div class="flex gap-1.5 px-4 py-2 text-[10px] font-semibold">
+                    <span class="rounded-full bg-ink px-2.5 py-1 text-white">Pratos</span>
+                    <span class="rounded-full border border-ink/10 bg-white px-2.5 py-1">Bebidas</span>
+                    <span class="rounded-full border border-ink/10 bg-white px-2.5 py-1">Sobremesas</span>
+                  </div>
+                  <div class="space-y-2 px-4 pb-4">
+                    <div class="flex items-center gap-3 rounded-xl bg-white p-2.5 shadow-sm">
+                      <div class="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-saffron to-ember">
+                        <div class="absolute inset-2 rounded-full border-2 border-white/60"></div>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <p class="truncate text-xs font-semibold">Risoto de cogumelos</p>
+                        <p class="text-[10px] text-ink/50">Parmesão, manteiga e ervas</p>
+                        <p class="text-xs font-bold">R$ 64,00</p>
+                      </div>
+                      <span class="flex h-7 w-7 items-center justify-center rounded-full bg-ember text-white"><svg data-icon="plus" class="h-3.5 w-3.5"></svg></span>
+                    </div>
+                    <div class="flex items-center gap-3 rounded-xl bg-white p-2.5 shadow-sm">
+                      <div class="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-[#c2410c] to-[#7c2d12]">
+                        <div class="absolute inset-2 rounded-full border-2 border-white/50"></div>
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <p class="truncate text-xs font-semibold">Burger da casa</p>
+                        <p class="text-[10px] text-ink/50">Blend 180g, cheddar, bacon</p>
+                        <p class="text-xs font-bold">R$ 42,00</p>
+                      </div>
+                      <span class="flex h-7 w-7 items-center justify-center rounded-full bg-ember text-white"><svg data-icon="plus" class="h-3.5 w-3.5"></svg></span>
+                    </div>
+                    <div class="flex items-center gap-3 rounded-xl bg-white p-2.5 opacity-60 shadow-sm">
+                      <div class="h-12 w-12 shrink-0 rounded-lg bg-gradient-to-br from-[#65a30d] to-[#3f6212]"></div>
+                      <div class="min-w-0 flex-1">
+                        <p class="truncate text-xs font-semibold">Salada da horta</p>
+                        <p class="text-xs font-bold">R$ 34,00</p>
+                      </div>
+                      <span class="rounded bg-red-600 px-1.5 py-0.5 text-[9px] font-bold text-white">Esgotado</span>
+                    </div>
+                  </div>
+                  <div class="mx-3 mb-3 flex items-center justify-between rounded-2xl bg-ember px-4 py-3 text-white">
+                    <span class="text-xs font-semibold">2 itens · Enviar pedido</span>
+                    <span class="text-xs font-bold">R$ 106,00</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Comanda da cozinha -->
+              <div class="float-delay card-glass absolute -top-4 -left-2 w-48 p-3.5 text-left shadow-2xl sm:-left-10">
+                <div class="flex items-center justify-between">
+                  <p class="text-xs font-bold">Mesa 07</p>
+                  <span class="flex items-center gap-1 rounded-md bg-saffron/20 px-1.5 py-0.5 text-[10px] font-bold text-saffron">
+                    <svg data-icon="clock" class="h-3 w-3"></svg> 12 min
+                  </span>
+                </div>
+                <p class="mt-2 text-xs font-semibold text-white">1× Risoto de cogumelos</p>
+                <p class="text-[10px] text-white/60">+ sem pimenta</p>
+                <div class="mt-2.5 rounded-lg bg-basil py-1.5 text-center text-[10px] font-bold">Finalizar preparo</div>
+              </div>
+
+              <!-- Notificação -->
+              <div class="float card-glass absolute -right-2 bottom-16 flex w-56 items-start gap-2.5 p-3 shadow-2xl sm:-right-10">
+                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand/30 text-white"><svg data-icon="bell" class="h-4 w-4"></svg></span>
+                <div>
+                  <p class="text-xs font-semibold">Mesa 03 pediu a conta</p>
+                  <p class="text-[10px] text-white/60">Comanda 0138 · agora</p>
+                </div>
+              </div>
+
+              <!-- Mini gráfico de faturamento -->
+              <div class="float-delay card-glass absolute -bottom-6 -left-4 w-44 p-3 shadow-2xl sm:-left-12">
+                <p class="text-[10px] text-white/60">Faturamento hoje</p>
+                <p class="text-sm font-bold">R$ 8.742,50</p>
+                <div class="mt-2 flex h-10 items-end gap-1">
+                  <span class="w-full rounded-sm bg-brand/50" style="height: 35%"></span>
+                  <span class="w-full rounded-sm bg-brand/60" style="height: 55%"></span>
+                  <span class="w-full rounded-sm bg-brand/70" style="height: 40%"></span>
+                  <span class="w-full rounded-sm bg-brand/80" style="height: 75%"></span>
+                  <span class="w-full rounded-sm bg-ember" style="height: 100%"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───────────── Fita de dores ───────────── -->
+      <div class="overflow-hidden border-y border-ink/10 bg-saffron py-3 text-ink" aria-hidden="true">
+        <div class="marquee flex w-max gap-10 text-sm font-semibold whitespace-nowrap">
+          <span>Pedido errado</span><span>•</span><span>Comanda de papel perdida</span><span>•</span><span>Caixa que não fecha</span><span>•</span
+          ><span>Cliente esperando a conta</span><span>•</span><span>Ingrediente acabando no meio do serviço</span><span>•</span
+          ><span>Prato que dá prejuízo</span><span>•</span><span>Fila indo embora</span><span>•</span>
+          <span>Pedido errado</span><span>•</span><span>Comanda de papel perdida</span><span>•</span><span>Caixa que não fecha</span><span>•</span
+          ><span>Cliente esperando a conta</span><span>•</span><span>Ingrediente acabando no meio do serviço</span><span>•</span
+          ><span>Prato que dá prejuízo</span><span>•</span><span>Fila indo embora</span><span>•</span>
+        </div>
+      </div>
+
+      <!-- ───────────── Dores ───────────── -->
+      <section id="dores" class="py-20 sm:py-28">
+        <div class="container-x">
+          <div class="reveal max-w-3xl">
+            <span class="eyebrow border-ember/30 bg-ember/10 text-ember-dark">Seja sincero</span>
+            <h2 class="h-display mt-5 text-3xl leading-tight sm:text-5xl">Quantas dessas aconteceram no seu restaurante <em>esta semana?</em></h2>
+            <p class="mt-5 text-lg text-ink/70">
+              Nenhuma delas aparece no cardápio, mas todas aparecem no seu resultado. São pequenas falhas que se repetem todos os dias — e que, somadas,
+              custam caro.
+            </p>
+          </div>
+
+          <div class="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <article class="reveal rounded-2xl border border-ink/10 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+              <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-ember/10 text-ember"><svg data-icon="notebook" class="h-5 w-5"></svg></span>
+              <h3 class="mt-4 text-lg font-semibold">O pedido saiu errado. De novo.</h3>
+              <p class="mt-2 text-ink/65">Letra ilegível na comanda, item esquecido, prato voltando para a cozinha. Você paga o insumo duas vezes e ainda perde o cliente.</p>
+            </article>
+            <article class="reveal rounded-2xl border border-ink/10 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+              <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-ember/10 text-ember"><svg data-icon="clock" class="h-5 w-5"></svg></span>
+              <h3 class="mt-4 text-lg font-semibold">Cliente esperando para pedir — e para pagar.</h3>
+              <p class="mt-2 text-ink/65">O garçom não dá conta, a mesa demora a girar e a fila lá fora desiste. Cada mesa parada é faturamento que não volta.</p>
+            </article>
+            <article class="reveal rounded-2xl border border-ink/10 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+              <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-ember/10 text-ember"><svg data-icon="wallet" class="h-5 w-5"></svg></span>
+              <h3 class="mt-4 text-lg font-semibold">O caixa não bate no fim da noite.</h3>
+              <p class="mt-2 text-ink/65">Faltou dinheiro, sobrou PIX, ninguém sabe onde está a diferença. E você vai dormir sem saber quanto realmente entrou.</p>
+            </article>
+            <article class="reveal rounded-2xl border border-ink/10 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+              <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-ember/10 text-ember"><svg data-icon="boxes" class="h-5 w-5"></svg></span>
+              <h3 class="mt-4 text-lg font-semibold">Acabou o ingrediente no meio do serviço.</h3>
+              <p class="mt-2 text-ink/65">Estoque controlado no “olhômetro”: compra demais o que estraga, compra de menos o que mais vende.</p>
+            </article>
+            <article class="reveal rounded-2xl border border-ink/10 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+              <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-ember/10 text-ember"><svg data-icon="trending-down" class="h-5 w-5"></svg></span>
+              <h3 class="mt-4 text-lg font-semibold">Você não sabe qual prato dá lucro.</h3>
+              <p class="mt-2 text-ink/65">Sem custo por prato, o carro-chefe pode ser justamente o que menos sobra. Preço definido no feeling é margem deixada na mesa.</p>
+            </article>
+            <article class="reveal rounded-2xl border border-ink/10 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+              <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-ember/10 text-ember"><svg data-icon="users" class="h-5 w-5"></svg></span>
+              <h3 class="mt-4 text-lg font-semibold">A conta dividida virou confusão.</h3>
+              <p class="mt-2 text-ink/65">Seis pessoas, cada uma com um consumo, um pagando no PIX e outro no cartão. Enquanto isso, a mesa segue ocupada.</p>
+            </article>
+          </div>
+
+          <p class="reveal mx-auto mt-14 max-w-2xl text-center font-serif text-2xl leading-snug text-ink sm:text-3xl">
+            Se você se reconheceu em <span class="text-ember">pelo menos duas</span>, o problema não é a sua equipe.
+            <span class="block text-ink/60">É a falta de um sistema que trabalhe junto com ela.</span>
+          </p>
+        </div>
+      </section>
+
+      <!-- ───────────── Solução ───────────── -->
+      <section id="solucao" class="relative overflow-hidden bg-ink py-20 text-white sm:py-28">
+        <div class="absolute inset-0 bg-[radial-gradient(50%_40%_at_80%_0%,rgb(61_59_255/0.25),transparent_70%)]"></div>
+        <div class="container-x relative">
+          <div class="reveal mx-auto max-w-3xl text-center">
+            <span class="eyebrow border-brand/50 bg-brand/15 text-[#b9b8ff]">A solução</span>
+            <h2 class="h-display mt-5 text-3xl leading-tight sm:text-5xl">Do pedido ao lucro, <em class="text-gradient">tudo em um só lugar.</em></h2>
+            <p class="mt-5 text-lg text-white/70">
+              Salão, cozinha, caixa e estoque conversando em tempo real. Cada pedido feito na mesa já chega na cozinha, entra na conta certa e baixa o
+              estoque — sem papel e sem retrabalho.
+            </p>
+          </div>
+
+          <div class="mt-16 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+            <article class="reveal card-glass p-6 transition hover:border-ember/40 hover:bg-white/[0.09]">
+              <svg data-icon="qr-code" class="h-7 w-7 text-saffron"></svg>
+              <h3 class="mt-4 text-lg font-semibold">Cardápio digital no QR Code</h3>
+              <p class="mt-2 text-white/65">O cliente escaneia, escolhe e pede pelo celular, sem baixar nada. Adicionais, ponto da carne e observações sem erro de anotação.</p>
+            </article>
+            <article class="reveal card-glass p-6 transition hover:border-ember/40 hover:bg-white/[0.09]">
+              <svg data-icon="notebook" class="h-7 w-7 text-saffron"></svg>
+              <h3 class="mt-4 text-lg font-semibold">Comanda do garçom no celular</h3>
+              <p class="mt-2 text-white/65">Lançamento rápido na mesa, várias comandas por mesa e envio direto para a cozinha. Chega de comanda de papel perdida.</p>
+            </article>
+            <article class="reveal card-glass p-6 transition hover:border-ember/40 hover:bg-white/[0.09]">
+              <svg data-icon="chef-hat" class="h-7 w-7 text-saffron"></svg>
+              <h3 class="mt-4 text-lg font-semibold">Cozinha em tempo real</h3>
+              <p class="mt-2 text-white/65">Tela da cozinha com alerta sonoro, tempo de preparo e cores de atraso. O garçom sabe na hora quando o prato está pronto.</p>
+            </article>
+            <article class="reveal card-glass p-6 transition hover:border-ember/40 hover:bg-white/[0.09]">
+              <svg data-icon="receipt" class="h-7 w-7 text-saffron"></svg>
+              <h3 class="mt-4 text-lg font-semibold">Conta e pagamento sem fila</h3>
+              <p class="mt-2 text-white/65">Cliente pede a conta pelo celular, você divide por pessoa, por itens ou em partes iguais, e recebe em dinheiro, PIX ou cartão.</p>
+            </article>
+            <article class="reveal card-glass p-6 transition hover:border-ember/40 hover:bg-white/[0.09]">
+              <svg data-icon="wallet" class="h-7 w-7 text-saffron"></svg>
+              <h3 class="mt-4 text-lg font-semibold">Caixa que fecha certo</h3>
+              <p class="mt-2 text-white/65">Abertura, sangria, suprimento e fechamento com conferência. Divergência aparece na hora, com justificativa registrada.</p>
+            </article>
+            <article class="reveal card-glass p-6 transition hover:border-ember/40 hover:bg-white/[0.09]">
+              <svg data-icon="boxes" class="h-7 w-7 text-saffron"></svg>
+              <h3 class="mt-4 text-lg font-semibold">Estoque com ficha técnica</h3>
+              <p class="mt-2 text-white/65">Cada venda baixa os ingredientes. Você vê o custo e a margem de cada prato e recebe sugestão de compra antes de faltar.</p>
+            </article>
+            <article class="reveal card-glass p-6 transition hover:border-ember/40 hover:bg-white/[0.09]">
+              <svg data-icon="bar-chart" class="h-7 w-7 text-saffron"></svg>
+              <h3 class="mt-4 text-lg font-semibold">Relatórios que mostram onde está o lucro</h3>
+              <p class="mt-2 text-white/65">Faturamento, ticket médio, curva ABC dos pratos, horários de pico e desempenho da equipe — com comparação com o período anterior.</p>
+            </article>
+            <article class="reveal card-glass p-6 transition hover:border-ember/40 hover:bg-white/[0.09]">
+              <svg data-icon="calendar" class="h-7 w-7 text-saffron"></svg>
+              <h3 class="mt-4 text-lg font-semibold">Reservas e fila de espera</h3>
+              <p class="mt-2 text-white/65">Agenda de reservas, fila organizada e mesa liberada aparecendo para a recepção. Menos cliente indo embora.</p>
+            </article>
+            <article class="reveal card-glass p-6 transition hover:border-ember/40 hover:bg-white/[0.09]">
+              <svg data-icon="star" class="h-7 w-7 text-saffron"></svg>
+              <h3 class="mt-4 text-lg font-semibold">Avaliação dos clientes</h3>
+              <p class="mt-2 text-white/65">Depois de pagar, o cliente avalia o atendimento. Nota baixa vira alerta para você agir antes de virar crítica na internet.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───────────── Antes x Depois ───────────── -->
+      <section class="py-20 sm:py-28">
+        <div class="container-x">
+          <div class="reveal mx-auto max-w-3xl text-center">
+            <h2 class="h-display text-3xl leading-tight sm:text-5xl">A mesma noite de sexta. <em class="text-ember">Dois restaurantes diferentes.</em></h2>
+          </div>
+          <div class="mt-14 grid gap-6 lg:grid-cols-2">
+            <div class="reveal rounded-3xl border border-ink/10 bg-cream-2 p-7 sm:p-9">
+              <p class="flex items-center gap-2 text-sm font-semibold tracking-wider text-ink/50 uppercase">
+                <svg data-icon="x-circle" class="h-5 w-5 text-red-500"></svg> Sem gestão
+              </p>
+              <ul class="mt-6 space-y-4 text-ink/75">
+                <li class="flex gap-3"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400"></span>Garçom anotando no papel e correndo até a cozinha.</li>
+                <li class="flex gap-3"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400"></span>Cozinha sem saber qual pedido está atrasado.</li>
+                <li class="flex gap-3"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400"></span>Cliente levantando a mão três vezes para pedir a conta.</li>
+                <li class="flex gap-3"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400"></span>Conta dividida na calculadora do celular.</li>
+                <li class="flex gap-3"><span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400"></span>Fechamento de caixa à 1h da manhã — e ainda assim errado.</li>
+              </ul>
+            </div>
+            <div class="reveal relative overflow-hidden rounded-3xl bg-ink p-7 text-white sm:p-9">
+              <div class="absolute -top-20 -right-20 h-60 w-60 rounded-full bg-ember/30 blur-3xl"></div>
+              <p class="relative flex items-center gap-2 text-sm font-semibold tracking-wider text-saffron uppercase">
+                <svg data-icon="check-circle" class="h-5 w-5"></svg> Com o Restly
+              </p>
+              <ul class="relative mt-6 space-y-4 text-white/85">
+                <li class="flex gap-3"><svg data-icon="check" class="mt-0.5 h-5 w-5 shrink-0 text-basil"></svg>Pedido feito na mesa chega na cozinha na hora, sem erro de anotação.</li>
+                <li class="flex gap-3"><svg data-icon="check" class="mt-0.5 h-5 w-5 shrink-0 text-basil"></svg>A cozinha vê o tempo de cada pedido e prioriza o que está atrasado.</li>
+                <li class="flex gap-3"><svg data-icon="check" class="mt-0.5 h-5 w-5 shrink-0 text-basil"></svg>O cliente chama o garçom e pede a conta pelo celular.</li>
+                <li class="flex gap-3"><svg data-icon="check" class="mt-0.5 h-5 w-5 shrink-0 text-basil"></svg>Conta dividida por pessoa ou por itens em poucos toques.</li>
+                <li class="flex gap-3"><svg data-icon="check" class="mt-0.5 h-5 w-5 shrink-0 text-basil"></svg>Caixa fechado com conferência e relatório pronto para imprimir.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───────────── Como funciona ───────────── -->
+      <section id="como-funciona" class="bg-cream-2 py-20 sm:py-28">
+        <div class="container-x">
+          <div class="reveal max-w-3xl">
+            <span class="eyebrow border-ink/15 bg-white text-ink/70">Simples de começar</span>
+            <h2 class="h-display mt-5 text-3xl leading-tight sm:text-5xl">Do primeiro contato ao <em class="text-ember">salão rodando.</em></h2>
+          </div>
+          <ol class="mt-14 grid gap-6 md:grid-cols-3">
+            <li class="reveal relative rounded-2xl bg-white p-7 shadow-sm">
+              <span class="font-serif text-5xl font-semibold text-ember/25">01</span>
+              <h3 class="mt-3 text-lg font-semibold">Orçamento sob medida</h3>
+              <p class="mt-2 text-ink/65">Você conta como funciona o seu restaurante — salões, mesas, equipe — e recebe uma proposta para a sua realidade.</p>
+            </li>
+            <li class="reveal relative rounded-2xl bg-white p-7 shadow-sm">
+              <span class="font-serif text-5xl font-semibold text-ember/25">02</span>
+              <h3 class="mt-3 text-lg font-semibold">Implantação acompanhada</h3>
+              <p class="mt-2 text-ink/65">Seu sistema fica pronto em um endereço exclusivo. Cadastramos juntos cardápio, mesas, equipe e imprimimos os QR Codes.</p>
+            </li>
+            <li class="reveal relative rounded-2xl bg-white p-7 shadow-sm">
+              <span class="font-serif text-5xl font-semibold text-ember/25">03</span>
+              <h3 class="mt-3 text-lg font-semibold">Operação no controle</h3>
+              <p class="mt-2 text-ink/65">Pedidos, cozinha, caixa e estoque funcionando juntos desde o primeiro serviço — e você acompanhando tudo pelos relatórios.</p>
+            </li>
+          </ol>
+
+          <div class="reveal mt-14 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <div class="flex items-start gap-3 rounded-xl border border-ink/10 bg-white/60 p-4">
+              <svg data-icon="shield" class="mt-0.5 h-5 w-5 shrink-0 text-brand"></svg>
+              <p><strong class="block">Seus dados, só seus</strong>Instalação exclusiva para o seu restaurante.</p>
+            </div>
+            <div class="flex items-start gap-3 rounded-xl border border-ink/10 bg-white/60 p-4">
+              <svg data-icon="smartphone" class="mt-0.5 h-5 w-5 shrink-0 text-brand"></svg>
+              <p><strong class="block">Sem instalar nada</strong>Funciona no navegador do celular, tablet e computador.</p>
+            </div>
+            <div class="flex items-start gap-3 rounded-xl border border-ink/10 bg-white/60 p-4">
+              <svg data-icon="users" class="mt-0.5 h-5 w-5 shrink-0 text-brand"></svg>
+              <p><strong class="block">Cada um no seu papel</strong>Acessos por cargo: garçom, cozinha, caixa, gerente.</p>
+            </div>
+            <div class="flex items-start gap-3 rounded-xl border border-ink/10 bg-white/60 p-4">
+              <svg data-icon="refresh" class="mt-0.5 h-5 w-5 shrink-0 text-brand"></svg>
+              <p><strong class="block">Sempre atualizado</strong>Novidades chegam ao seu sistema sem você fazer nada.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───────────── Para quem ───────────── -->
+      <section class="py-16">
+        <div class="container-x reveal text-center">
+          <p class="text-sm font-semibold tracking-wider text-ink/50 uppercase">Feito para quem vive o salão</p>
+          <div class="mt-6 flex flex-wrap justify-center gap-3 font-serif text-lg sm:text-xl">
+            <span class="rounded-full border border-ink/10 bg-white px-5 py-2">Restaurantes</span>
+            <span class="rounded-full border border-ink/10 bg-white px-5 py-2">Bares</span>
+            <span class="rounded-full border border-ink/10 bg-white px-5 py-2">Pizzarias</span>
+            <span class="rounded-full border border-ink/10 bg-white px-5 py-2">Hamburguerias</span>
+            <span class="rounded-full border border-ink/10 bg-white px-5 py-2">Cafeterias</span>
+            <span class="rounded-full border border-ink/10 bg-white px-5 py-2">Bistrôs</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───────────── Orçamento ───────────── -->
+      <section id="orcamento" class="glow-hero grain relative overflow-hidden py-20 text-white sm:py-28">
+        <div class="container-x relative z-10 grid items-start gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+          <div class="reveal lg:sticky lg:top-28">
+            <span class="eyebrow border-ember/40 bg-ember/10 text-saffron">Orçamento gratuito</span>
+            <h2 class="h-display mt-5 text-3xl leading-tight sm:text-5xl">
+              Cada noite sem controle é <em class="text-gradient">dinheiro deixado na mesa.</em>
+            </h2>
+            <p class="mt-5 text-lg text-white/70">
+              Conte um pouco sobre o seu restaurante. Nós entramos em contato com uma proposta pensada para o seu tamanho e o seu jeito de trabalhar.
+            </p>
+            <ul class="mt-8 space-y-3 text-white/80">
+              <li class="flex items-center gap-3"><svg data-icon="check" class="h-5 w-5 text-saffron"></svg> Leva menos de 1 minuto</li>
+              <li class="flex items-center gap-3"><svg data-icon="check" class="h-5 w-5 text-saffron"></svg> Sem compromisso e sem custo</li>
+              <li class="flex items-center gap-3"><svg data-icon="check" class="h-5 w-5 text-saffron"></svg> Atendimento por gente que entende de restaurante</li>
+            </ul>
+            <a href="#" class="btn-whatsapp mt-8 hidden" data-whatsapp target="_blank" rel="noopener">
+              <svg data-icon="message-circle" class="h-5 w-5"></svg> Prefiro falar no WhatsApp
+            </a>
+          </div>
+
+          <div class="reveal rounded-3xl bg-cream p-6 text-ink shadow-2xl shadow-black/40 sm:p-9">
+            <form id="lead-form" novalidate class="grid gap-4 sm:grid-cols-2">
+              <div class="sm:col-span-2">
+                <label class="label" for="name">Seu nome *</label>
+                <input class="field" id="name" name="name" autocomplete="name" required maxlength="120" />
+              </div>
+              <div>
+                <label class="label" for="phone">WhatsApp com DDD *</label>
+                <input class="field" id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(11) 98888-7777" required />
+              </div>
+              <div>
+                <label class="label" for="email">E-mail</label>
+                <input class="field" id="email" name="email" type="email" autocomplete="email" maxlength="160" />
+              </div>
+              <div class="sm:col-span-2">
+                <label class="label" for="restaurantName">Nome do restaurante *</label>
+                <input class="field" id="restaurantName" name="restaurantName" autocomplete="organization" required maxlength="160" />
+              </div>
+              <div>
+                <label class="label" for="city">Cidade</label>
+                <input class="field" id="city" name="city" autocomplete="address-level2" maxlength="120" />
+              </div>
+              <div>
+                <label class="label" for="tablesRange">Quantas mesas?</label>
+                <select class="field" id="tablesRange" name="tablesRange">
+                  <option value="">Selecione</option>
+                  <option value="1-10">Até 10</option>
+                  <option value="11-20">11 a 20</option>
+                  <option value="21-40">21 a 40</option>
+                  <option value="41+">Mais de 40</option>
+                </select>
+              </div>
+              <div class="sm:col-span-2">
+                <label class="label" for="message">Qual é a sua maior dor hoje?</label>
+                <textarea
+                  class="field"
+                  id="message"
+                  name="message"
+                  rows="3"
+                  maxlength="1000"
+                  placeholder="Ex.: pedidos errados, demora para fechar a conta, não sei o lucro de cada prato…"
+                ></textarea>
+              </div>
+              <!-- Armadilha para robôs (fica escondida das pessoas) -->
+              <div class="hidden" aria-hidden="true">
+                <label for="website">Site</label>
+                <input id="website" name="website" tabindex="-1" autocomplete="off" />
+              </div>
+              <label class="flex items-start gap-3 text-sm text-ink/70 sm:col-span-2">
+                <input type="checkbox" name="consent" class="mt-0.5 h-4 w-4 shrink-0 accent-ember" required />
+                Autorizo o contato do Restly por WhatsApp, telefone ou e-mail sobre este orçamento.
+              </label>
+              <p id="form-error" class="hidden rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700 sm:col-span-2" role="alert"></p>
+              <button type="submit" class="btn-primary w-full sm:col-span-2">
+                <span data-submit-label>Quero meu orçamento gratuito</span>
+                <svg data-icon="arrow-right" class="h-4 w-4"></svg>
+              </button>
+            </form>
+
+            <div id="form-success" class="hidden py-8 text-center" role="status">
+              <span class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-basil/15 text-basil"><svg data-icon="check" class="h-7 w-7"></svg></span>
+              <h3 class="mt-5 font-serif text-2xl font-semibold">Pedido recebido!</h3>
+              <p class="mx-auto mt-2 max-w-sm text-ink/70">Obrigado pelo interesse. Em breve entraremos em contato pelo WhatsApp informado.</p>
+              <a href="#" class="btn-whatsapp mt-6 hidden" data-whatsapp target="_blank" rel="noopener">
+                <svg data-icon="message-circle" class="h-5 w-5"></svg> Adiantar a conversa no WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───────────── Dúvidas ───────────── -->
+      <section id="duvidas" class="py-20 sm:py-28">
+        <div class="container-x grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
+          <div class="reveal">
+            <h2 class="h-display text-3xl leading-tight sm:text-5xl">Dúvidas <em class="text-ember">frequentes</em></h2>
+            <p class="mt-4 text-ink/65">Não encontrou o que procurava? Peça seu orçamento e tire todas as dúvidas com a gente.</p>
+          </div>
+          <div class="reveal divide-y divide-ink/10 rounded-2xl border border-ink/10 bg-white">
+            <details class="group p-6">
+              <summary class="flex cursor-pointer items-center justify-between gap-4 font-semibold">
+                Meus clientes precisam baixar algum aplicativo?<span class="faq-icon text-2xl text-ember transition">+</span>
+              </summary>
+              <p class="mt-3 text-ink/65">Não. O cliente aponta a câmera para o QR Code da mesa e o cardápio abre direto no navegador do celular.</p>
+            </details>
+            <details class="group p-6">
+              <summary class="flex cursor-pointer items-center justify-between gap-4 font-semibold">
+                Preciso comprar computador ou equipamento novo?<span class="faq-icon text-2xl text-ember transition">+</span>
+              </summary>
+              <p class="mt-3 text-ink/65">
+                O Restly funciona no navegador, então você pode usar o computador, tablet e celulares que já tem. A tela da cozinha pode rodar em uma TV ou
+                tablet.
+              </p>
+            </details>
+            <details class="group p-6">
+              <summary class="flex cursor-pointer items-center justify-between gap-4 font-semibold">
+                Mais de uma pessoa pode pedir na mesma mesa?<span class="faq-icon text-2xl text-ember transition">+</span>
+              </summary>
+              <p class="mt-3 text-ink/65">Sim. Cada pessoa tem a própria comanda, e a conta pode ser dividida por pessoa, por itens ou em partes iguais.</p>
+            </details>
+            <details class="group p-6">
+              <summary class="flex cursor-pointer items-center justify-between gap-4 font-semibold">
+                O garçom ainda pode lançar pedidos?<span class="faq-icon text-2xl text-ember transition">+</span>
+              </summary>
+              <p class="mt-3 text-ink/65">Sim. O garçom lança pedidos pelo celular na comanda do cliente — ideal para quem prefere pedir ao atendente.</p>
+            </details>
+            <details class="group p-6">
+              <summary class="flex cursor-pointer items-center justify-between gap-4 font-semibold">
+                Consigo controlar o que cada funcionário acessa?<span class="faq-icon text-2xl text-ember transition">+</span>
+              </summary>
+              <p class="mt-3 text-ink/65">
+                Sim. Cada cargo tem permissões próprias: o garçom vê só os salões dele, a cozinha não vê valores e o caixa fica restrito a quem você
+                autorizar.
+              </p>
+            </details>
+            <details class="group p-6">
+              <summary class="flex cursor-pointer items-center justify-between gap-4 font-semibold">
+                Quanto custa?<span class="faq-icon text-2xl text-ember transition">+</span>
+              </summary>
+              <p class="mt-3 text-ink/65">
+                Depende do tamanho e da operação do seu restaurante. Por isso o orçamento é sob medida: preencha o formulário e enviamos uma proposta sem
+                compromisso.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- ───────────── CTA final ───────────── -->
+      <section class="pb-20 sm:pb-28">
+        <div class="container-x">
+          <div class="reveal relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand to-brand-2 px-6 py-14 text-center text-white sm:px-12">
+            <div class="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-ember/40 blur-3xl"></div>
+            <h2 class="h-display relative text-3xl leading-tight sm:text-5xl">Seu restaurante merece funcionar tão bem quanto a sua cozinha.</h2>
+            <p class="relative mx-auto mt-4 max-w-2xl text-lg text-white/80">Peça agora o seu orçamento e veja o Restly funcionando com a cara do seu negócio.</p>
+            <div class="relative mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+              <a href="#orcamento" class="btn-primary">Quero um orçamento gratuito</a>
+              <a href="#" class="btn-ghost-dark hidden" data-whatsapp target="_blank" rel="noopener">
+                <svg data-icon="message-circle" class="h-4 w-4"></svg> Falar no WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="border-t border-ink/10 py-10">
+      <div class="container-x flex flex-col items-center justify-between gap-4 text-sm text-ink/60 sm:flex-row">
+        <img src="/brand/logo.png" alt="Restly" class="h-7 w-auto" />
+        <p data-footer-contact></p>
+        <p>© <span data-year></span> Restly. Todos os direitos reservados.</p>
+      </div>
+    </footer>
+
+    <!-- WhatsApp flutuante -->
+    <a
+      href="#"
+      data-whatsapp
+      target="_blank"
+      rel="noopener"
+      aria-label="Falar no WhatsApp"
+      class="fixed right-5 bottom-5 z-50 hidden h-14 w-14 items-center justify-center rounded-full bg-basil text-white shadow-xl shadow-basil/30 transition hover:scale-105"
+    >
+      <svg data-icon="message-circle" class="h-6 w-6"></svg>
+    </a>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -58,5 +58,16 @@ services:
     ports:
       - '${HTTP_PORT:-80}:80'
 
+  # Site de vendas (domínio principal). Repassa ao Hub só o formulário de orçamento.
+  site:
+    build:
+      context: .
+      dockerfile: docker/site.prod.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - '${SITE_HTTP_PORT:-8081}:80'
+
 volumes:
   restly_hub_mysql_data:

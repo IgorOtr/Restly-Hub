@@ -81,6 +81,15 @@ docker compose up -d --build
 
 As instalações ficam em `http://{cliente}.localhost:8080`.
 
+### Site de vendas (`site/`)
+
+Página de captação de clientes para o domínio principal (ex.: `restly.com.br`). O formulário de orçamento
+grava o pedido em **Leads** no Hub; o WhatsApp e o e-mail comerciais vêm de **Configurações → Site de vendas**.
+
+- Desenvolvimento: `docker compose --profile site up -d site` → http://localhost:5175
+- Produção: serviço `site` do `docker-compose.prod.yml` (nginx; repassa ao Hub apenas
+  `/api/public/site/leads` e `/api/public/site/config`, com limite de envios por IP).
+
 ### Atualizar a versão dos clientes
 
 1. Gere as imagens novas: `docker/build-images.sh` no repositório do Restly
