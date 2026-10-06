@@ -1,11 +1,11 @@
-@import '@fontsource-variable/fraunces';
-@import '@fontsource-variable/inter';
+@import '@fontsource-variable/plus-jakarta-sans';
 @import 'tailwindcss';
 
 /* Paleta da logo: azul e violeta do ícone + marinho do "Restly". */
 @theme {
-  --font-serif: 'Fraunces Variable', ui-serif, Georgia, serif;
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  /* Mesma linha da logo: sans geométrica (títulos em extra negrito). */
+  --font-display: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, sans-serif;
 
   --color-ink: #0c0c26;
   --color-ink-2: #14143a;
@@ -42,8 +42,13 @@
   @apply inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-semibold tracking-wider uppercase;
 }
 @utility h-display {
-  @apply font-serif font-semibold tracking-tight text-balance;
-  font-variation-settings: 'opsz' 144, 'SOFT' 50;
+  @apply font-display font-extrabold tracking-tight text-balance;
+  letter-spacing: -0.03em;
+
+  /* Ênfase sem itálico: só a cor/degradê destaca. */
+  & em {
+    font-style: normal;
+  }
 }
 @utility btn {
   @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none sm:text-base;
