@@ -100,6 +100,8 @@ As instalações ficam em `http://{cliente}.localhost:8080`.
 
 ## Funcionalidades
 
+- Login com verificação em duas etapas (TOTP — Google Authenticator, Authy, 1Password), com códigos de recuperação. Ative em **Configurações → Segurança**. Em produção defina `TOTP_ENCRYPTION_KEY` (não troque depois de ativar)
+
 - Clientes: cadastro, dados comerciais (mensalidade, vencimento), encerrar/reativar
 - Instalações: criação automática, link de convite, parar/iniciar, atualizar versão (individual ou todas de uma vez) e remover preservando os dados (com recriação reaproveitando banco e arquivos)
 - Encerrar cliente bloqueia e para a instalação; reativar volta a iniciá-la (ainda bloqueada)

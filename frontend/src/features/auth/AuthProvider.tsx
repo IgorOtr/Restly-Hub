@@ -13,7 +13,9 @@ export interface HubUser {
 interface AuthContextValue {
   status: Status
   user: HubUser | null
-  login: (email: string, password: string) => Promise<void>
+  /** 'mfa' quando a conta exige o código do app (segundo passo: verifyMfa). */
+  login: (email: string, password: string) => Promise<{ mfaToken: string } | null>
+  verifyMfa: (mfaToken: string, code: string) => Promise<void>
   registerAdmin: (data: { name: string; email: string; password: string }) => Promise<void>
   logout: () => Promise<void>
 }
@@ -50,7 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       status,
       user,
       login: async (email, password) => {
-        const { data } = await api.post<{ accessToken: string }>('/auth/login', { email, password })
+        const { data } = await api.post<{ accessToken: string } | { mfaRequired: true; mfaToken: string }>('/auth/login', { email, password })
+        if ('mfaRequired' in data) return { mfaToken: data.mfaToken }
+        tokenStore.set(data.accessToken)
+        await loadUser()
+        return null
+      },
+      verifyMfa: async (mfaToken, code) => {
+        const { data } = await api.post<{ accessToken: string }>('/auth/login/2fa', { mfaToken, code })
         tokenStore.set(data.accessToken)
         await loadUser()
       },

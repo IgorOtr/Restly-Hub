@@ -5,6 +5,7 @@ import type { StringValue } from 'ms';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { PasswordService } from './password.service';
+import { TwoFactorService } from './two-factor.service';
 
 @Global()
 @Module({
@@ -22,7 +23,7 @@ import { PasswordService } from './password.service';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, PasswordService],
+  providers: [AuthService, PasswordService, TwoFactorService],
   exports: [JwtModule],
 })
 export class AuthModule {}

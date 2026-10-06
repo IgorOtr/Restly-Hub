@@ -8,10 +8,19 @@ import { JwtService } from '@nestjs/jwt';
 import { createHash, randomBytes } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PasswordService } from './password.service';
+import { TwoFactorService } from './two-factor.service';
 import type { LoginDto, RegisterAdminDto } from './dto/auth.dto';
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_MINUTES = 15;
+/** Tempo para digitar o código do app após acertar a senha. */
+const MFA_TOKEN_TTL = '5m';
+
+/** Senha correta, mas falta o segundo fator. */
+export interface MfaChallenge {
+  mfaRequired: true;
+  mfaToken: string;
+}
 
 export interface RequestMeta {
   ip?: string;
@@ -33,6 +42,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly passwords: PasswordService,
+    private readonly twoFactor: TwoFactorService,
   ) {}
 
   async needsSetup() {
@@ -55,7 +65,10 @@ export class AuthService {
     return this.issueSession(user.id, meta);
   }
 
-  async login(dto: LoginDto, meta: RequestMeta) {
+  async login(
+    dto: LoginDto,
+    meta: RequestMeta,
+  ): Promise<IssuedTokens | MfaChallenge> {
     const user = await this.prisma.hubUser.findUnique({
       where: { email: dto.email },
     });
@@ -71,31 +84,83 @@ export class AuthService {
       );
 
     if (!(await this.passwords.verify(user.passwordHash, dto.password))) {
-      const attempts = user.failedLoginAttempts + 1;
-      const lock = attempts >= MAX_FAILED_ATTEMPTS;
-      await this.prisma.hubUser.update({
-        where: { id: user.id },
-        data: {
-          failedLoginAttempts: lock ? 0 : attempts,
-          lockedUntil: lock
-            ? new Date(Date.now() + LOCK_MINUTES * 60_000)
-            : null,
-        },
-      });
+      await this.registerFailure(user);
       throw invalid;
     }
     if (user.status !== 'ACTIVE')
       throw new UnauthorizedException('Usuário inativo');
 
+    // Com 2FA ativa, a sessão só é criada após o código do app.
+    if (user.totpEnabledAt)
+      return {
+        mfaRequired: true,
+        mfaToken: await this.jwt.signAsync(
+          { sub: user.id, typ: 'mfa' },
+          {
+            secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
+            expiresIn: MFA_TOKEN_TTL,
+          },
+        ),
+      };
+    return this.completeLogin(user.id, meta);
+  }
+
+  /** Segundo passo do login: código do app autenticador ou de recuperação. */
+  async loginSecondFactor(mfaToken: string, code: string, meta: RequestMeta) {
+    const expired = new UnauthorizedException(
+      'O tempo para informar o código expirou. Entre novamente.',
+    );
+    let payload: { sub: string; typ: string };
+    try {
+      payload = await this.jwt.verifyAsync(mfaToken, {
+        secret: this.config.getOrThrow<string>('JWT_REFRESH_SECRET'),
+        algorithms: ['HS256'],
+      });
+    } catch {
+      throw expired;
+    }
+    if (payload.typ !== 'mfa') throw expired;
+    const user = await this.prisma.hubUser.findUnique({
+      where: { id: payload.sub },
+    });
+    if (!user || user.status !== 'ACTIVE' || !user.totpEnabledAt) throw expired;
+    if (user.lockedUntil && user.lockedUntil > new Date())
+      throw new UnauthorizedException(
+        'Conta temporariamente bloqueada por excesso de tentativas. Tente novamente mais tarde.',
+      );
+    if (!(await this.twoFactor.verify(user, code))) {
+      await this.registerFailure(user);
+      throw new UnauthorizedException('Código inválido');
+    }
+    return this.completeLogin(user.id, meta);
+  }
+
+  /** Erros de senha ou de código contam juntos para o bloqueio temporário. */
+  private async registerFailure(user: {
+    id: string;
+    failedLoginAttempts: number;
+  }) {
+    const attempts = user.failedLoginAttempts + 1;
+    const lock = attempts >= MAX_FAILED_ATTEMPTS;
     await this.prisma.hubUser.update({
       where: { id: user.id },
+      data: {
+        failedLoginAttempts: lock ? 0 : attempts,
+        lockedUntil: lock ? new Date(Date.now() + LOCK_MINUTES * 60_000) : null,
+      },
+    });
+  }
+
+  private async completeLogin(userId: string, meta: RequestMeta) {
+    await this.prisma.hubUser.update({
+      where: { id: userId },
       data: {
         failedLoginAttempts: 0,
         lockedUntil: null,
         lastLoginAt: new Date(),
       },
     });
-    return this.issueSession(user.id, meta);
+    return this.issueSession(userId, meta);
   }
 
   async refresh(refreshToken: string | undefined, meta: RequestMeta) {

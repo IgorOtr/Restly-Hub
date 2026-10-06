@@ -39,6 +39,14 @@ model HubUser {
   failedLoginAttempts Int          @default(0)
   lockedUntil         DateTime?
   lastLoginAt         DateTime?
+  // Verificação em duas etapas (TOTP). Segredos criptografados (AES-256-GCM).
+  totpSecret          String?      @db.VarChar(255)
+  totpPendingSecret   String?      @db.VarChar(255)
+  totpEnabledAt       DateTime?
+  // Último intervalo de 30 s aceito: impede reutilizar o mesmo código.
+  totpLastStep        Int?
+  // Hashes SHA-256 dos códigos de recuperação ainda não usados.
+  recoveryCodes       Json?
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
 
@@ -89,11 +97,11 @@ model Client {
   dueDay     Int?
 
   // Licença atual.
-  status           LicenseStatus @default(ACTIVE)
-  reason           String?       @db.VarChar(80)
-  message          String?       @db.Text
-  dueDate          DateTime?
-  statusChangedAt  DateTime      @default(now())
+  status          LicenseStatus @default(ACTIVE)
+  reason          String?       @db.VarChar(80)
+  message         String?       @db.Text
+  dueDate         DateTime?
+  statusChangedAt DateTime      @default(now())
 
   // Credencial da instalação: só o hash é guardado; a chave é exibida uma única vez.
   instanceKeyHash   String @db.Char(64)
@@ -109,9 +117,9 @@ model Client {
   needsSetup      Boolean?
 
   // Última comunicação da instalação (monitoramento).
-  lastCheckAt      DateTime?
-  lastCheckIp      String?   @db.VarChar(64)
-  lastVersion      String?   @db.VarChar(40)
+  lastCheckAt DateTime?
+  lastCheckIp String?   @db.VarChar(64)
+  lastVersion String?   @db.VarChar(40)
 
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt

@@ -40,3 +40,33 @@ export class RegisterAdminDto {
   @MaxLength(128)
   password: string;
 }
+
+export class LoginSecondFactorDto {
+  @ApiProperty()
+  @IsString()
+  @MaxLength(1000)
+  mfaToken: string;
+
+  /** Código do app autenticador (6 dígitos) ou de recuperação (xxxxx-xxxxx). */
+  @ApiProperty({ description: 'Código do app ou de recuperação' })
+  @IsString()
+  @MinLength(6)
+  @MaxLength(20)
+  code: string;
+}
+
+export class TwoFactorCodeDto {
+  @ApiProperty()
+  @IsString()
+  @MinLength(6)
+  @MaxLength(20)
+  code: string;
+}
+
+export class DisableTwoFactorDto extends TwoFactorCodeDto {
+  @ApiProperty()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(128)
+  password: string;
+}

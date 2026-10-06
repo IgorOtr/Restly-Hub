@@ -21,6 +21,12 @@ export function validateEnv(env: Record<string, unknown>) {
   }
   if (production && env.JWT_ACCESS_SECRET === env.JWT_REFRESH_SECRET)
     errors.push('Os segredos JWT devem ser diferentes entre si');
+  const totpKey =
+    typeof env.TOTP_ENCRYPTION_KEY === 'string' ? env.TOTP_ENCRYPTION_KEY : '';
+  if (production && (totpKey.length < 32 || WEAK.test(totpKey)))
+    errors.push(
+      'TOTP_ENCRYPTION_KEY deve ter ao menos 32 caracteres aleatórios em produção',
+    );
   if (production && env.COOKIE_SECURE !== 'true')
     errors.push('COOKIE_SECURE=true é obrigatório em produção (HTTPS)');
 
