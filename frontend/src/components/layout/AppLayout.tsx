@@ -88,7 +88,9 @@ export function AppLayout() {
           items={[{ label: 'Sair', icon: LogOut, onClick: () => void logout(), danger: true }]}
           trigger={({ toggle }) => (
             <button type="button" onClick={toggle} className="flex items-center gap-2.5 rounded-lg px-1.5 py-1 transition-colors hover:bg-surface-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">{initials(user.name)}</span>
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-soft text-xs font-semibold text-primary">
+                {initials(user.name)}
+              </span>
               <span className="hidden text-sm font-medium sm:block">{user.name.split(' ')[0]}</span>
               <ChevronDown size={14} className="text-muted" />
             </button>
