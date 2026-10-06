@@ -1,10 +1,11 @@
+@import '@fontsource-variable/bricolage-grotesque';
 @import '@fontsource-variable/plus-jakarta-sans';
 @import 'tailwindcss';
 
 /* Paleta da logo: azul e violeta do ícone + marinho do "Restly". */
 @theme {
-  /* Mesma linha da logo: sans geométrica (títulos em extra negrito). */
-  --font-display: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  /* Títulos e destaques: Bricolage Grotesque; textos corridos: Plus Jakarta Sans. */
+  --font-display: 'Bricolage Grotesque Variable', ui-sans-serif, system-ui, sans-serif;
   --font-sans: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, sans-serif;
 
   --color-ink: #0c0c26;
