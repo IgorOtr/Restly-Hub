@@ -22,7 +22,10 @@ function RedirectIfAuthenticated({ children }: { children: ReactNode }) {
 
 export const router = createBrowserRouter([
   { path: '/login', element: <RedirectIfAuthenticated>{page(() => import('@/features/auth/LoginPage'), 'LoginPage')}</RedirectIfAuthenticated> },
-  { path: '/setup', element: <RedirectIfAuthenticated>{page(() => import('@/features/auth/SetupAdminPage'), 'SetupAdminPage')}</RedirectIfAuthenticated> },
+  {
+    path: '/setup',
+    element: <RedirectIfAuthenticated>{page(() => import('@/features/auth/SetupAdminPage'), 'SetupAdminPage')}</RedirectIfAuthenticated>,
+  },
   {
     element: <AppLayout />,
     children: [
@@ -30,6 +33,7 @@ export const router = createBrowserRouter([
       { path: 'dashboard', element: page(() => import('@/features/dashboard/DashboardPage'), 'DashboardPage') },
       { path: 'clients', element: page(() => import('@/features/clients/ClientsPage'), 'ClientsPage') },
       { path: 'clients/:id', element: page(() => import('@/features/clients/ClientDetailPage'), 'ClientDetailPage') },
+      { path: 'leads', element: page(() => import('@/features/leads/LeadsPage'), 'LeadsPage') },
       { path: 'settings', element: page(() => import('@/features/settings/SettingsPage'), 'SettingsPage') },
     ],
   },

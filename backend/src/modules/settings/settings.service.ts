@@ -9,6 +9,13 @@ export interface SupportContact {
 }
 
 const CONTACT_KEY = 'support.contact';
+const SALES_KEY = 'site.sales_contact';
+
+/** Contato comercial exibido no site de vendas. */
+export interface SalesContact {
+  whatsapp: string | null;
+  email: string | null;
+}
 const EMPTY: SupportContact = {
   name: null,
   phone: null,
@@ -45,6 +52,20 @@ export class SettingsService {
 
   async setSupportContact(contact: SupportContact) {
     await this.set(CONTACT_KEY, JSON.stringify(contact));
+    return contact;
+  }
+
+  async salesContact(): Promise<SalesContact> {
+    const raw = await this.get(SALES_KEY);
+    return {
+      whatsapp: null,
+      email: null,
+      ...(raw ? (JSON.parse(raw) as Partial<SalesContact>) : {}),
+    };
+  }
+
+  async setSalesContact(contact: SalesContact) {
+    await this.set(SALES_KEY, JSON.stringify(contact));
     return contact;
   }
 }

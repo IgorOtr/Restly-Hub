@@ -15,6 +15,7 @@ import { QueryState } from '@/components/ui/States'
 import { useToast } from '@/components/ui/Toast'
 import { ThemeToggle } from '@/features/theme/ThemeToggle'
 import { TwoFactorCard } from './TwoFactorCard'
+import { SalesContactCard } from './SalesContactCard'
 import { settingsApi, settingsKey } from '@/features/clients/api'
 
 const schema = z.object({
@@ -110,6 +111,7 @@ export function SettingsPage() {
               </div>
             </Card>
             <TwoFactorCard />
+            <SalesContactCard value={s?.salesContact} />
             <Card>
               <CardHeader title="Aparência" description="Preferência salva neste navegador" />
               <div className="p-5">

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Navigate, Outlet, useLocation } from 'react-router-dom'
-import { Building2, ChevronDown, LayoutDashboard, LogOut, Menu, Settings } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { Building2, ChevronDown, Inbox, LayoutDashboard, LogOut, Menu, Settings } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { useAuth } from '@/features/auth/AuthProvider'
 import { ThemeToggle } from '@/features/theme/ThemeToggle'
@@ -8,14 +9,18 @@ import { Dropdown } from '@/components/ui/Dropdown'
 import { IconButton } from '@/components/ui/IconButton'
 import { LoadingState } from '@/components/ui/States'
 import { Logo } from './Logo'
+import { leadsApi, leadsKeys } from '@/features/leads/api'
 
 const NAV = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Clientes', path: '/clients', icon: Building2 },
+  { label: 'Leads', path: '/leads', icon: Inbox },
   { label: 'Configurações', path: '/settings', icon: Settings },
 ]
 
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+  // Leads novos do site (atualiza a cada minuto).
+  const newLeads = useQuery({ queryKey: leadsKeys.newCount, queryFn: leadsApi.newCount, refetchInterval: 60_000 })
   return (
     <nav className="flex h-full flex-col">
       <div className="flex h-16 items-center px-5">
@@ -36,6 +41,9 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
             >
               <item.icon size={17} />
               {item.label}
+              {item.path === '/leads' && Boolean(newLeads.data) && (
+                <span className="ml-auto rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-fg tabular-nums">{newLeads.data}</span>
+              )}
             </NavLink>
           </li>
         ))}

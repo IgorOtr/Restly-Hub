@@ -48,6 +48,22 @@ class SupportContactDto {
   url: string | null;
 }
 
+class SalesContactDto {
+  @IsOptional()
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.replace(/\D/g, '') || null : null,
+  )
+  @Matches(/^\d{12,13}$/, {
+    message: 'WhatsApp com DDI e DDD (ex.: 55 11 98888-7777)',
+  })
+  whatsapp: string | null;
+
+  @IsOptional()
+  @Clean()
+  @IsEmail({}, { message: 'E-mail inválido' })
+  email: string | null;
+}
+
 @ApiTags('settings')
 @ApiBearerAuth()
 @Controller('settings')
@@ -63,12 +79,21 @@ export class SettingsController {
   async get() {
     return {
       supportContact: await this.settings.supportContact(),
+      salesContact: await this.settings.salesContact(),
       // Dados usados para configurar cada instalação (variáveis LICENSE_*).
       hubPublicKey: this.signing.publicKey(),
       hubPublicUrl: this.config.get<string>('HUB_PUBLIC_URL') ?? null,
       // Criação automática de instalações (null = agente não configurado/indisponível).
       provisioning: await this.provisioning.health(),
     };
+  }
+
+  @Put('sales-contact')
+  setSalesContact(@Body() dto: SalesContactDto) {
+    return this.settings.setSalesContact({
+      whatsapp: dto.whatsapp ?? null,
+      email: dto.email ?? null,
+    });
   }
 
   @Put('support-contact')

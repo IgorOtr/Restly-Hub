@@ -185,6 +185,7 @@ export interface RedeployJob {
 
 export interface HubSettings {
   supportContact: { name: string | null; phone: string | null; email: string | null; url: string | null }
+  salesContact: { whatsapp: string | null; email: string | null }
   hubPublicKey: string
   hubPublicUrl: string | null
   /** Servidor de instalações disponível para criação automática (null = indisponível). */

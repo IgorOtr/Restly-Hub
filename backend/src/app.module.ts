@@ -11,6 +11,7 @@ import { ClientsModule } from './modules/clients/clients.module';
 import { DashboardController } from './modules/dashboard/dashboard.controller';
 import { LicensesModule } from './modules/licenses/licenses.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { LeadsModule } from './modules/leads/leads.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { SettingsModule } from './modules/settings/settings.module';
     PrismaModule,
     AuthModule,
     SettingsModule,
+    LeadsModule,
     ClientsModule,
     LicensesModule,
   ],

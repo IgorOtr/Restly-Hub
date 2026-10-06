@@ -151,6 +151,38 @@ model LicenseEvent {
   @@index([createdAt])
 }
 
+// ───────────────────────────── Leads (site) ─────────────────────────────
+
+enum LeadStatus {
+  NEW // chegou pelo site, ainda sem contato
+  CONTACTED // primeiro contato feito
+  NEGOTIATING // orçamento em negociação
+  WON // virou cliente
+  LOST // não fechou
+}
+
+// Pedido de orçamento enviado pelo site de vendas.
+model Lead {
+  id             String     @id @default(uuid()) @db.Char(36)
+  leadNumber     Int        @unique @default(autoincrement())
+  name           String     @db.VarChar(120)
+  phone          String     @db.VarChar(20)
+  email          String?    @db.VarChar(160)
+  restaurantName String     @db.VarChar(160)
+  city           String?    @db.VarChar(120)
+  tablesRange    String?    @db.VarChar(20)
+  message        String?    @db.VarChar(1000)
+  status         LeadStatus @default(NEW)
+  notes          String?    @db.Text
+  ip             String?    @db.VarChar(64)
+  userAgent      String?    @db.VarChar(255)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+}
+
 // Configurações do Hub (chave de assinatura, contato padrão etc.).
 model Setting {
   key       String   @id @db.VarChar(80)
